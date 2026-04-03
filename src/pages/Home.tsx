@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { Hero } from '../components/Hero/Hero';
 import { StatsBar } from '../components/StatsBar/StatsBar';
 import { AppCard } from '../components/AppCard/AppCard';
-import { MOCK_APPS } from '../data/mockApps';
 import { supabase } from '../lib/supabaseClient';
 import type { VibeApp, AppCategory } from '../types/app';
 
@@ -17,6 +16,7 @@ export const Home = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[Home] useEffect running - fetching apps...');
     const fetchApps = async () => {
       try {
         const { data, error } = await supabase
@@ -24,39 +24,44 @@ export const Home = () => {
           .select('*')
           .order('created_at', { ascending: false });
 
+        console.log('[Home] fetched apps:', data?.length, 'apps');
+        data?.forEach(app => {
+          console.log(`App: ${app.name} - Thumbnail: ${app.thumbnail_url || 'NO THUMBNAIL'}`);
+        });
+
         if (error) {
           console.error('Error fetching apps:', error);
-          // Fallback to mock data if Supabase fails
-          setApps(MOCK_APPS);
+          setApps([]);
         } else if (data) {
           // Transform Supabase data to VibeApp format
           const transformedApps: VibeApp[] = data.map(app => ({
-              id: app.id,
-              name: app.name,
-              slug: app.slug,
-              shortDescription: app.short_description,
-              longDescription: app.long_description,
-              thumbnail: app.thumbnail_url || '/placeholder-app.png',
-              category: app.category as AppCategory,
-              tags: app.tags || [],
-              techStack: app.tech_stack || [],
-              author: {
-                name: app.author_name,
-                avatarInitials: app.author_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
-                avatarColor: `hsl(${Math.abs(app.author_name.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 360}, 70%, 50%)`,
-              },
-              upvotes: app.upvotes,
-              demoUrl: app.app_url,
-              repoUrl: app.repo_url,
-              featured: app.featured,
-              createdAt: app.created_at,
-            }));
+            id: app.id,
+            name: app.name,
+            slug: app.slug,
+            shortDescription: app.short_description,
+            longDescription: app.long_description,
+            thumbnail: app.thumbnail_url || '/placeholder-app.png',
+            category: app.category as AppCategory,
+            tags: app.tags || [],
+            techStack: app.tech_stack || [],
+            author: {
+              name: app.author_name,
+              avatarInitials: app.author_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+              avatarColor: `hsl(${Math.abs(app.author_name.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 360}, 70%, 50%)`,
+            },
+            upvotes: app.upvotes,
+            demoUrl: app.app_url,
+            repoUrl: app.repo_url,
+            featured: app.featured,
+            createdAt: app.created_at,
+          }));
           setApps(transformedApps);
         }
       } catch (error) {
-        console.error('Error fetching apps:', error);
-        setApps(MOCK_APPS);
+        console.error('[Home] Error in fetchApps:', error);
+        setApps([]);
       } finally {
+        console.log('[Home] fetchApps completed');
         setLoading(false);
       }
     };
@@ -80,6 +85,25 @@ export const Home = () => {
 
   const featuredApps = useMemo(() => apps.filter(a => a.featured), [apps]);
 
+  const handleUpvote = async (appId: string, delta: number) => {
+    setApps(prev => prev.map(app => app.id === appId ? { ...app, upvotes: app.upvotes + delta } : app));
+
+    const app = apps.find(a => a.id === appId);
+    if (!app) return;
+
+    try {
+      const { error } = await supabase
+        .from('apps')
+        .update({ upvotes: app.upvotes + delta })
+        .eq('id', appId);
+      if (error) {
+        console.error('Supabase upvote update failed:', error);
+      }
+    } catch (err) {
+      console.error('Supabase upvote update exception:', err);
+    }
+  };
+
   return (
     <>
       {/* ── Hero ── */}
@@ -87,7 +111,7 @@ export const Home = () => {
 
       <div className="container">
         {/* ── Stats Bar ── */}
-        <StatsBar />
+        <StatsBar apps={apps} />
 
         {/* ── Featured Spotlight ── */}
         {!searchQuery && !activeCategory && !loading && featuredApps.length > 0 && (
@@ -108,7 +132,7 @@ export const Home = () => {
             <div className="scroll-row">
               {featuredApps.map(app => (
                 <div key={app.id} style={{ width: 'min(340px, 80vw)' }}>
-                  <AppCard app={app} />
+                  <AppCard app={app} onUpvote={handleUpvote} />
                 </div>
               ))}
             </div>
@@ -217,7 +241,7 @@ export const Home = () => {
               </div>
             ))
           ) : filtered.length > 0 ? (
-            filtered.map(app => <AppCard key={app.id} app={app} />)
+            filtered.map(app => <AppCard key={app.id} app={app} onUpvote={handleUpvote} />)
           ) : (
             <div style={{
               gridColumn: '1/-1',

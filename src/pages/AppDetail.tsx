@@ -1,7 +1,8 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Code2, ArrowUp, Tag, Layers, Users } from 'lucide-react';
-import { MOCK_APPS } from '../data/mockApps';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import type { VibeApp } from '../types/app';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Developer Tool': '#3b82f6',
@@ -15,10 +16,59 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export const AppDetail = () => {
   const { slug } = useParams<{ slug: string }>();
-  const app = MOCK_APPS.find(a => a.slug === slug);
-
+  const [app, setApp] = useState<VibeApp | null>(null);
+  const [loading, setLoading] = useState(true);
   const [upvoted, setUpvoted] = useState(false);
-  const [votes, setVotes] = useState(app?.upvotes ?? 0);
+  const [votes, setVotes] = useState(0);
+
+  useEffect(() => {
+    const fetchApp = async () => {
+      if (!slug) return;
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('apps')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (error) {
+        console.error('Failed to fetch app:', error);
+        setApp(null);
+      } else if (data) {
+        const mapped: VibeApp = {
+          id: data.id,
+          name: data.name,
+          slug: data.slug,
+          shortDescription: data.short_description,
+          longDescription: data.long_description,
+          thumbnail: data.thumbnail_url || '/placeholder-app.png',
+          category: data.category as VibeApp['category'],
+          tags: data.tags || [],
+          techStack: data.tech_stack || [],
+          author: {
+            name: data.author_name || 'Unknown',
+            avatarInitials: (data.author_name || 'U').split(' ').map((p: string) => p[0]).join('').toUpperCase().slice(0, 2),
+            avatarColor: `hsl(${Math.abs((data.author_name || 'Unknown').split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 360}, 70%, 50%)`,
+          },
+          upvotes: data.upvotes || 0,
+          demoUrl: data.app_url,
+          repoUrl: data.repo_url,
+          featured: data.featured || false,
+          createdAt: data.created_at,
+        };
+
+        setApp(mapped);
+        setVotes(mapped.upvotes);
+      }
+      setLoading(false);
+    };
+
+    fetchApp();
+  }, [slug]);
+
+  if (loading) {
+    return <div className="container" style={{ padding: 'var(--space-8)' }}>Loading app details…</div>;
+  }
 
   if (!app) {
     return (

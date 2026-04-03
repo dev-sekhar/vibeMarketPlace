@@ -1,16 +1,18 @@
-import { MOCK_APPS } from '../../data/mockApps';
+import type { VibeApp } from '../../types/app';
 
-const stats = [
-  { label: 'Apps Listed', value: MOCK_APPS.length.toString() },
-  { label: 'Creators', value: new Set(MOCK_APPS.map(a => a.author.name)).size.toString() },
-  {
-    label: 'Total Upvotes',
-    value: MOCK_APPS.reduce((s, a) => s + a.upvotes, 0).toLocaleString(),
-  },
-  { label: 'Categories', value: new Set(MOCK_APPS.map(a => a.category)).size.toString() },
-];
+interface StatsBarProps {
+  apps: VibeApp[];
+}
 
-export const StatsBar = () => (
+export const StatsBar = ({ apps }: StatsBarProps) => {
+  const stats = [
+    { label: 'Apps Listed', value: apps.length.toString() },
+    { label: 'Creators', value: new Set(apps.map(a => a.author.name)).size.toString() },
+    { label: 'Total Upvotes', value: apps.reduce((s, a) => s + a.upvotes, 0).toLocaleString() },
+    { label: 'Categories', value: new Set(apps.map(a => a.category)).size.toString() },
+  ];
+
+  return (
   <div
     aria-label="Platform statistics"
     style={{
@@ -52,3 +54,4 @@ export const StatsBar = () => (
     ))}
   </div>
 );
+};

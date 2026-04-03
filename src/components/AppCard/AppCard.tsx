@@ -6,6 +6,7 @@ import styles from './AppCard.module.css';
 
 interface AppCardProps {
   app: VibeApp;
+  onUpvote?: (appId: string, delta: number) => void;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -18,16 +19,20 @@ const CATEGORY_COLORS: Record<string, string> = {
   'CLI Tool': '#64748b',
 };
 
-export const AppCard = ({ app }: AppCardProps) => {
+export const AppCard = ({ app, onUpvote }: AppCardProps) => {
   const [upvoted, setUpvoted] = useState(false);
   const [votes, setVotes] = useState(app.upvotes);
   const categoryColor = CATEGORY_COLORS[app.category] ?? '#6e6e77';
 
+  console.log(`[AppCard] Rendering ${app.name} with thumbnail: ${app.thumbnail}`);
+
   const handleUpvote = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const delta = upvoted ? -1 : 1;
     setUpvoted(prev => !prev);
-    setVotes(prev => prev + (upvoted ? -1 : 1));
+    setVotes(prev => prev + delta);
+    onUpvote?.(app.id, delta);
   };
 
   return (
@@ -35,10 +40,11 @@ export const AppCard = ({ app }: AppCardProps) => {
       {/* Thumbnail */}
       <div className={styles.thumbnailWrapper}>
         <img
-          src={app.thumbnail}
+          src={app.thumbnail || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTIxMjE3Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2E2YTZiNyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='}
           alt={`${app.name} screenshot`}
           className={styles.thumbnail}
-          loading="lazy"
+          onError={(e) => console.error(`[AppCard] Image failed to load for ${app.name}:`, e.currentTarget.src)}
+          onLoad={() => console.log(`[AppCard] Image loaded successfully for ${app.name}`)}
         />
         {app.featured && (
           <span className={styles.featuredBadge}>⚡ Featured</span>
