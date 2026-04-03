@@ -1,6 +1,7 @@
+import { useVibeAuth } from '../../context/AuthContext';
 import styles from './SSOButtons.module.css';
 
-// Inline SVGs for Google and GitHub brand icons (not in lucide-react)
+// Inline SVGs for brand icons (not in lucide-react)
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
     <path fill="#4285F4" d="M47.5 24.5c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.3 5.5-5 7.2v6h8c4.7-4.3 7.3-10.7 7.3-17.3z"/>
@@ -20,25 +21,29 @@ interface SSOButtonsProps {
   label?: string;
 }
 
-export const SSOButtons = ({ label = 'sign in' }: SSOButtonsProps) => (
-  <div className={styles.ssoRow}>
-    <button
-      id={`sso-google-${label}`}
-      type="button"
-      className={styles.ssoBtn}
-      onClick={() => alert('Google SSO — connect Supabase Auth in production')}
-    >
-      <GoogleIcon />
-      Continue with Google
-    </button>
-    <button
-      id={`sso-github-${label}`}
-      type="button"
-      className={styles.ssoBtn}
-      onClick={() => alert('GitHub SSO — connect Supabase Auth in production')}
-    >
-      <GitHubIcon />
-      Continue with GitHub
-    </button>
-  </div>
-);
+export const SSOButtons = ({ label = 'sign-in' }: SSOButtonsProps) => {
+  const { signInWithGoogle, signInWithGitHub } = useVibeAuth();
+
+  return (
+    <div className={styles.ssoRow}>
+      <button
+        id={`sso-google-${label}`}
+        type="button"
+        className={styles.ssoBtn}
+        onClick={signInWithGoogle}
+      >
+        <GoogleIcon />
+        Continue with Google
+      </button>
+      <button
+        id={`sso-github-${label}`}
+        type="button"
+        className={styles.ssoBtn}
+        onClick={signInWithGitHub}
+      >
+        <GitHubIcon />
+        Continue with GitHub
+      </button>
+    </div>
+  );
+};

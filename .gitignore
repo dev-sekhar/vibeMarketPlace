@@ -7,18 +7,42 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependency directories
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
 *.local
+
+# Environment files
+.env
+.env.*
+
+# Test coverage
+coverage/
+
+# Package manager caches
+.pnpm-store/
+.npm/
+.yarn/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary files
+*.tmp
+*.temp
+
+# Antigravity IDE project files (if applicable)
+.antigravity/
+.antigravity-settings.json

@@ -10,16 +10,26 @@
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* Font Sizes */
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.875rem;   /* 14px */
-  --text-base: 1rem;     /* 16px */
-  --text-lg: 1.125rem;   /* 18px */
-  --text-xl: 1.25rem;    /* 20px */
-  --text-2xl: 1.5rem;    /* 24px */
-  --text-3xl: 1.875rem;  /* 30px */
-  --text-4xl: 2.25rem;   /* 36px */
-  --text-5xl: 3rem;      /* 48px */
-  --text-6xl: 3.75rem;   /* 60px */
+  --text-xs: 0.75rem;
+  /* 12px */
+  --text-sm: 0.875rem;
+  /* 14px */
+  --text-base: 1rem;
+  /* 16px */
+  --text-lg: 1.125rem;
+  /* 18px */
+  --text-xl: 1.25rem;
+  /* 20px */
+  --text-2xl: 1.5rem;
+  /* 24px */
+  --text-3xl: 1.875rem;
+  /* 30px */
+  --text-4xl: 2.25rem;
+  /* 36px */
+  --text-5xl: 3rem;
+  /* 48px */
+  --text-6xl: 3.75rem;
+  /* 60px */
 
   /* -------------- Core Colors -------------- */
   /* Backgrounds & Surfaces (Deep Dark Mode) */
@@ -38,10 +48,13 @@
   --border-strong: rgba(255, 255, 255, 0.15);
 
   /* Highlight/Accent Colors (Neon/Vibrant) */
-  --accent-base: #3b82f6; /* Electric Blue */
-  --accent-secondary: #a855f7; /* Purple */
-  --accent-tertiary: #ec4899; /* Pink */
-  
+  --accent-base: #3b82f6;
+  /* Electric Blue */
+  --accent-secondary: #a855f7;
+  /* Purple */
+  --accent-tertiary: #ec4899;
+  /* Pink */
+
   --gradient-neon: linear-gradient(135deg, var(--accent-base), var(--accent-secondary), var(--accent-tertiary));
   --gradient-glow: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(168, 85, 247, 0.5));
 
@@ -71,20 +84,20 @@
   --radius-xl: 16px;
   --radius-2xl: 24px;
   --radius-full: 9999px;
-  
+
   --max-w-screen: 1440px;
 
   /* -------------- Effects & Elements -------------- */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -1px rgba(0,0,0,0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.6), 0 4px 6px -2px rgba(0,0,0,0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 0 20px rgba(168, 85, 247, 0.3);
 
   --blur-md: blur(8px);
   --blur-lg: blur(16px);
-  
+
   --glass-bg: rgba(18, 18, 23, 0.65);
-  
+
   --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-normal: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-slow: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -125,7 +138,12 @@ body {
 }
 
 /* Typography elements */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
   font-weight: 700;
   line-height: 1.2;
@@ -133,11 +151,27 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
 }
 
-h1 { font-size: var(--text-5xl); letter-spacing: -0.02em; }
-h2 { font-size: var(--text-4xl); letter-spacing: -0.01em; }
-h3 { font-size: var(--text-3xl); }
-h4 { font-size: var(--text-2xl); }
-h5 { font-size: var(--text-xl); }
+h1 {
+  font-size: var(--text-5xl);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: var(--text-4xl);
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: var(--text-3xl);
+}
+
+h4 {
+  font-size: var(--text-2xl);
+}
+
+h5 {
+  font-size: var(--text-xl);
+}
 
 p {
   margin-bottom: var(--space-4);
@@ -150,12 +184,16 @@ a {
   transition: color var(--transition-fast);
 }
 
-a:hover, a:focus {
+a:hover,
+a:focus {
   color: var(--accent-base);
 }
 
 /* Interactive Resets */
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font-family: inherit;
   color: inherit;
 }
@@ -171,7 +209,8 @@ button:active {
   transform: scale(0.98);
 }
 
-button:focus-visible, a:focus-visible {
+button:focus-visible,
+a:focus-visible {
   outline: 2px solid var(--accent-base);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
@@ -211,16 +250,22 @@ button:focus-visible, a:focus-visible {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(20px);
   }
-  to { 
+
+  to {
     opacity: 1;
     transform: translateY(0);
   }
@@ -235,13 +280,39 @@ button:focus-visible, a:focus-visible {
 }
 
 @keyframes floatOrb {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-30px) scale(1.05); }
+
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+
+  50% {
+    transform: translateY(-30px) scale(1.05);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Scroll-snap featured row */
@@ -256,7 +327,7 @@ button:focus-visible, a:focus-visible {
   scrollbar-color: var(--border-strong) transparent;
 }
 
-.scroll-row > * {
+.scroll-row>* {
   scroll-snap-align: start;
   flex-shrink: 0;
 }
@@ -272,6 +343,7 @@ img[loading] {
   opacity: 0;
   transition: opacity var(--transition-slow);
 }
+
 img.loaded {
   opacity: 1;
 }

@@ -1,26 +1,35 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Zap, Eye, EyeOff } from 'lucide-react';
 import { SSOButtons } from '../components/auth/SSOButtons';
+import { useVibeAuth } from '../context/AuthContext';
 import styles from './Auth.module.css';
 
 export const Login = () => {
+  const { signInWithEmail } = useVibeAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    // Placeholder — hook up to Supabase Auth in production
-    setTimeout(() => setLoading(false), 1500);
+    const err = await signInWithEmail(email, password);
+    if (err) {
+      setError(err);
+      setLoading(false);
+    } else {
+      navigate('/');
+    }
   };
 
   return (
     <div className={styles.page}>
       <div className={`glass-panel ${styles.card}`}>
-        {/* Brand */}
         <div className={styles.brand}>
           <Zap color="var(--accent-secondary)" fill="var(--accent-secondary)" size={28} />
           <span>VibeMarket</span>
@@ -29,12 +38,14 @@ export const Login = () => {
         <h1 className={styles.heading}>Welcome back</h1>
         <p className={styles.sub}>Sign in to your account to continue</p>
 
-        {/* SSO Buttons */}
         <SSOButtons />
 
         <div className={styles.divider}><span>or continue with email</span></div>
 
-        {/* Email/password form */}
+        {error && (
+          <div className={styles.errorBox}>{error}</div>
+        )}
+
         <form onSubmit={handleSubmit} noValidate>
           <div className={styles.field}>
             <label htmlFor="login-email" className={styles.label}>Email</label>
@@ -82,18 +93,13 @@ export const Login = () => {
             </div>
           </div>
 
-          <button
-            id="login-submit"
-            type="submit"
-            className={styles.submitBtn}
-            disabled={loading}
-          >
+          <button id="login-submit" type="submit" className={styles.submitBtn} disabled={loading}>
             {loading ? <span className={styles.spinner} /> : 'Sign In'}
           </button>
         </form>
 
         <p className={styles.switchText}>
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link to="/register" className={styles.switchLink}>Create one</Link>
         </p>
       </div>

@@ -1,21 +1,49 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User, Zap, Eye, EyeOff } from 'lucide-react';
 import { SSOButtons } from '../components/auth/SSOButtons';
+import { useVibeAuth } from '../context/AuthContext';
 import styles from './Auth.module.css';
 
 export const Register = () => {
+  const { signUpWithEmail } = useVibeAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    setTimeout(() => setLoading(false), 1500);
+    const err = await signUpWithEmail(name, email, password);
+    setLoading(false);
+    if (err) {
+      setError(err);
+    } else {
+      setSuccess(true);
+      setTimeout(() => navigate('/login'), 3000);
+    }
   };
+
+  if (success) {
+    return (
+      <div className={styles.page}>
+        <div className={`glass-panel ${styles.card}`} style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>📬</div>
+          <h2 className={styles.heading}>Check your inbox!</h2>
+          <p className={styles.sub}>
+            We've sent a confirmation link to <strong>{email}</strong>.<br />
+            Confirm your email then sign in.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
@@ -31,6 +59,8 @@ export const Register = () => {
         <SSOButtons label="register" />
 
         <div className={styles.divider}><span>or register with email</span></div>
+
+        {error && <div className={styles.errorBox}>{error}</div>}
 
         <form onSubmit={handleSubmit} noValidate>
           <div className={styles.field}>

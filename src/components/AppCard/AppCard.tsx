@@ -10,12 +10,12 @@ interface AppCardProps {
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Developer Tool': '#3b82f6',
-  'Productivity':   '#10b981',
-  'Web App':        '#a855f7',
-  'Game':           '#f59e0b',
-  'AI Assistant':   '#ec4899',
-  'Finance':        '#06b6d4',
-  'CLI Tool':       '#64748b',
+  'Productivity': '#10b981',
+  'Web App': '#a855f7',
+  'Game': '#f59e0b',
+  'AI Assistant': '#ec4899',
+  'Finance': '#06b6d4',
+  'CLI Tool': '#64748b',
 };
 
 export const AppCard = ({ app }: AppCardProps) => {
@@ -31,7 +31,6 @@ export const AppCard = ({ app }: AppCardProps) => {
   };
 
   return (
-    <Link to={`/app/${app.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
     <article className={styles.card}>
       {/* Thumbnail */}
       <div className={styles.thumbnailWrapper}>
@@ -51,6 +50,7 @@ export const AppCard = ({ app }: AppCardProps) => {
             rel="noopener noreferrer"
             className={styles.overlayBtn}
             aria-label={`Live demo of ${app.name}`}
+            onClick={(e) => e.stopPropagation()}
           >
             <ExternalLink size={16} />
             Live Demo
@@ -61,6 +61,7 @@ export const AppCard = ({ app }: AppCardProps) => {
             rel="noopener noreferrer"
             className={styles.overlayBtn}
             aria-label={`Source code of ${app.name}`}
+            onClick={(e) => e.stopPropagation()}
           >
             <Code2 size={16} />
             Source
@@ -68,52 +69,53 @@ export const AppCard = ({ app }: AppCardProps) => {
         </div>
       </div>
 
-      {/* Body */}
-      <div className={styles.body}>
-        {/* Category + Upvote */}
-        <div className={styles.meta}>
-          <span
-            className={styles.category}
-            style={{ color: categoryColor, borderColor: `${categoryColor}44`, background: `${categoryColor}11` }}
-          >
-            {app.category}
-          </span>
-          <button
-            className={`${styles.upvoteBtn} ${upvoted ? styles.upvoted : ''}`}
-            onClick={handleUpvote}
-            aria-label={`Upvote ${app.name}`}
-            aria-pressed={upvoted}
-          >
-            <ArrowUp size={14} />
-            <span>{votes}</span>
-          </button>
-        </div>
+      {/* Body - wrapped in Link */}
+      <Link to={`/app/${app.slug}`} style={{ textDecoration: 'none', display: 'contents' }}>
+        <div className={styles.body}>
+          {/* Category + Upvote */}
+          <div className={styles.meta}>
+            <span
+              className={styles.category}
+              style={{ color: categoryColor, borderColor: `${categoryColor}44`, background: `${categoryColor}11` }}
+            >
+              {app.category}
+            </span>
+            <button
+              className={`${styles.upvoteBtn} ${upvoted ? styles.upvoted : ''}`}
+              onClick={handleUpvote}
+              aria-label={`Upvote ${app.name}`}
+              aria-pressed={upvoted}
+            >
+              <ArrowUp size={14} />
+              <span>{votes}</span>
+            </button>
+          </div>
 
-        {/* Title + Description */}
-        <h3 className={styles.title}>{app.name}</h3>
-        <p className={styles.description}>{app.shortDescription}</p>
+          {/* Title + Description */}
+          <h3 className={styles.title}>{app.name}</h3>
+          <p className={styles.description}>{app.shortDescription}</p>
 
-        {/* Tags */}
-        <div className={styles.tags}>
-          <Tag size={12} color="var(--text-tertiary)" />
-          {app.tags.slice(0, 3).map(tag => (
-            <span key={tag} className={styles.tag}>{tag}</span>
-          ))}
-        </div>
+          {/* Tags */}
+          <div className={styles.tags}>
+            <Tag size={12} color="var(--text-tertiary)" />
+            {app.tags.slice(0, 3).map(tag => (
+              <span key={tag} className={styles.tag}>{tag}</span>
+            ))}
+          </div>
 
-        {/* Author */}
-        <div className={styles.author}>
-          <span
-            className={styles.avatar}
-            style={{ background: app.author.avatarColor }}
-            aria-label={app.author.name}
-          >
-            {app.author.avatarInitials}
-          </span>
-          <span className={styles.authorName}>{app.author.name}</span>
+          {/* Author */}
+          <div className={styles.author}>
+            <span
+              className={styles.avatar}
+              style={{ background: app.author.avatarColor }}
+              aria-label={app.author.name}
+            >
+              {app.author.avatarInitials}
+            </span>
+            <span className={styles.authorName}>{app.author.name}</span>
+          </div>
         </div>
-      </div>
+      </Link>
     </article>
-    </Link>
   );
 };

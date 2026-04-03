@@ -1,23 +1,72 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Hero } from '../components/Hero/Hero';
 import { StatsBar } from '../components/StatsBar/StatsBar';
 import { AppCard } from '../components/AppCard/AppCard';
 import { MOCK_APPS } from '../data/mockApps';
-import type { AppCategory } from '../types/app';
+import { supabase } from '../lib/supabaseClient';
+import type { VibeApp, AppCategory } from '../types/app';
 
 const ALL_CATEGORIES: AppCategory[] = [
   'Web App', 'CLI Tool', 'Productivity', 'Game', 'Developer Tool', 'Finance', 'AI Assistant',
 ];
 
-const FEATURED = MOCK_APPS.filter(a => a.featured);
-
 export const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<AppCategory | null>(null);
+  const [apps, setApps] = useState<VibeApp[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('apps')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching apps:', error);
+          // Fallback to mock data if Supabase fails
+          setApps(MOCK_APPS);
+        } else if (data) {
+          // Transform Supabase data to VibeApp format
+          const transformedApps: VibeApp[] = data.map(app => ({
+              id: app.id,
+              name: app.name,
+              slug: app.slug,
+              shortDescription: app.short_description,
+              longDescription: app.long_description,
+              thumbnail: app.thumbnail_url || '/placeholder-app.png',
+              category: app.category as AppCategory,
+              tags: app.tags || [],
+              techStack: app.tech_stack || [],
+              author: {
+                name: app.author_name,
+                avatarInitials: app.author_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+                avatarColor: `hsl(${Math.abs(app.author_name.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 360}, 70%, 50%)`,
+              },
+              upvotes: app.upvotes,
+              demoUrl: app.app_url,
+              repoUrl: app.repo_url,
+              featured: app.featured,
+              createdAt: app.created_at,
+            }));
+          setApps(transformedApps);
+        }
+      } catch (error) {
+        console.error('Error fetching apps:', error);
+        setApps(MOCK_APPS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApps();
+  }, []);
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return MOCK_APPS.filter(app => {
+    return apps.filter(app => {
       const matchesSearch =
         !q ||
         app.name.toLowerCase().includes(q) ||
@@ -27,7 +76,9 @@ export const Home = () => {
       const matchesCategory = !activeCategory || app.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, apps]);
+
+  const featuredApps = useMemo(() => apps.filter(a => a.featured), [apps]);
 
   return (
     <>
@@ -39,7 +90,7 @@ export const Home = () => {
         <StatsBar />
 
         {/* ── Featured Spotlight ── */}
-        {!searchQuery && !activeCategory && (
+        {!searchQuery && !activeCategory && !loading && featuredApps.length > 0 && (
           <section aria-label="Featured apps" style={{ marginBottom: 'var(--space-12)' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-3)', marginBottom: 'var(--space-6)' }}>
               <h2 style={{
@@ -55,7 +106,7 @@ export const Home = () => {
               </span>
             </div>
             <div className="scroll-row">
-              {FEATURED.map(app => (
+              {featuredApps.map(app => (
                 <div key={app.id} style={{ width: 'min(340px, 80vw)' }}>
                   <AppCard app={app} />
                 </div>
@@ -102,8 +153,8 @@ export const Home = () => {
             {searchQuery
               ? <>Results for "<span className="text-gradient">{searchQuery}</span>"</>
               : activeCategory
-              ? activeCategory
-              : 'All Apps'}
+                ? activeCategory
+                : 'All Apps'}
           </h2>
           <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>
             {filtered.length} {filtered.length === 1 ? 'app' : 'apps'}
@@ -121,7 +172,51 @@ export const Home = () => {
             paddingBottom: 'var(--space-16)',
           }}
         >
-          {filtered.length > 0 ? (
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-xl)',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                animation: 'pulse 2s ease-in-out infinite',
+              }}>
+                <div style={{
+                  width: '100%',
+                  aspectRatio: '16 / 9',
+                  background: 'var(--bg-surface-elevated)',
+                }} />
+                <div style={{
+                  padding: 'var(--space-4)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-3)',
+                  flex: 1,
+                }}>
+                  <div style={{
+                    height: '20px',
+                    background: 'var(--bg-surface-elevated)',
+                    borderRadius: 'var(--radius-md)',
+                  }} />
+                  <div style={{
+                    height: '16px',
+                    background: 'var(--bg-surface-elevated)',
+                    borderRadius: 'var(--radius-md)',
+                    width: '80%',
+                  }} />
+                  <div style={{
+                    height: '16px',
+                    background: 'var(--bg-surface-elevated)',
+                    borderRadius: 'var(--radius-md)',
+                    width: '60%',
+                  }} />
+                </div>
+              </div>
+            ))
+          ) : filtered.length > 0 ? (
             filtered.map(app => <AppCard key={app.id} app={app} />)
           ) : (
             <div style={{
