@@ -3,11 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User, Zap, Eye, EyeOff } from 'lucide-react';
 import { SSOButtons } from '../components/auth/SSOButtons';
 import { useVibeAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import styles from './Auth.module.css';
 
 export const Register = () => {
   const { signUpWithEmail } = useVibeAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,11 +37,8 @@ export const Register = () => {
       <div className={styles.page}>
         <div className={`glass-panel ${styles.card}`} style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>📬</div>
-          <h2 className={styles.heading}>Check your inbox!</h2>
-          <p className={styles.sub}>
-            We've sent a confirmation link to <strong>{email}</strong>.<br />
-            Confirm your email then sign in.
-          </p>
+          <h2 className={styles.heading}>{t('register.checkInbox')}</h2>
+          <p className={styles.sub}>{t('register.confirmationMessage', { email })}</p>
         </div>
       </div>
     );
@@ -53,18 +52,18 @@ export const Register = () => {
           <span>VibeMarket</span>
         </div>
 
-        <h1 className={styles.heading}>Join the community</h1>
-        <p className={styles.sub}>Create your account and start submitting tools</p>
+        <h1 className={styles.heading}>{t('register.title')}</h1>
+        <p className={styles.sub}>{t('register.subtitle')}</p>
 
         <SSOButtons label="register" />
 
-        <div className={styles.divider}><span>or register with email</span></div>
+        <div className={styles.divider}><span>{t('register.orEmail')}</span></div>
 
         {error && <div className={styles.errorBox}>{error}</div>}
 
         <form onSubmit={handleSubmit} noValidate>
           <div className={styles.field}>
-            <label htmlFor="register-name" className={styles.label}>Display name</label>
+            <label htmlFor="register-name" className={styles.label}>{t('register.displayName')}</label>
             <div className={styles.inputWrapper}>
               <User size={16} className={styles.inputIcon} />
               <input
@@ -74,14 +73,14 @@ export const Register = () => {
                 required
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="Your name or handle"
+                placeholder={t('register.placeholder.name')}
                 className={styles.input}
               />
             </div>
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="register-email" className={styles.label}>Email</label>
+            <label htmlFor="register-email" className={styles.label}>{t('register.email')}</label>
             <div className={styles.inputWrapper}>
               <Mail size={16} className={styles.inputIcon} />
               <input
@@ -91,14 +90,14 @@ export const Register = () => {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder={t('register.placeholder.email')}
                 className={styles.input}
               />
             </div>
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="register-password" className={styles.label}>Password</label>
+            <label htmlFor="register-password" className={styles.label}>{t('register.password')}</label>
             <div className={styles.inputWrapper}>
               <Lock size={16} className={styles.inputIcon} />
               <input
@@ -109,7 +108,7 @@ export const Register = () => {
                 minLength={8}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Min. 8 characters"
+                placeholder={t('register.placeholder.password')}
                 className={styles.input}
                 style={{ paddingRight: '2.75rem' }}
               />
@@ -117,7 +116,7 @@ export const Register = () => {
                 type="button"
                 onClick={() => setShowPw(p => !p)}
                 className={styles.eyeBtn}
-                aria-label={showPw ? 'Hide password' : 'Show password'}
+                aria-label={showPw ? t('register.hidePassword') : t('register.showPassword')}
               >
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -125,19 +124,17 @@ export const Register = () => {
           </div>
 
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: '0 0 var(--space-4)' }}>
-            By registering you agree to our{' '}
-            <a href="#" style={{ color: 'var(--accent-secondary)' }}>Terms of Service</a> and{' '}
-            <a href="#" style={{ color: 'var(--accent-secondary)' }}>Privacy Policy</a>.
+            {t('register.terms')}
           </p>
 
           <button id="register-submit" type="submit" className={styles.submitBtn} disabled={loading}>
-            {loading ? <span className={styles.spinner} /> : 'Create Account'}
+            {loading ? <span className={styles.spinner} /> : t('register.createAccount')}
           </button>
         </form>
 
         <p className={styles.switchText}>
-          Already have an account?{' '}
-          <Link to="/login" className={styles.switchLink}>Sign in</Link>
+          {t('register.hasAccount')}{' '}
+          <Link to="/login" className={styles.switchLink}>{t('register.signIn')}</Link>
         </p>
       </div>
     </div>

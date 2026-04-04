@@ -2,20 +2,22 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Code2, ArrowUp, Tag, Layers, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useTranslation } from 'react-i18next';
 import type { VibeApp } from '../types/app';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Developer Tool': '#3b82f6',
-  'Productivity':   '#10b981',
-  'Web App':        '#a855f7',
-  'Game':           '#f59e0b',
-  'AI Assistant':   '#ec4899',
-  'Finance':        '#06b6d4',
-  'CLI Tool':       '#64748b',
+  'Productivity': '#10b981',
+  'Web App': '#a855f7',
+  'Game': '#f59e0b',
+  'AI Assistant': '#ec4899',
+  'Finance': '#06b6d4',
+  'CLI Tool': '#64748b',
 };
 
 export const AppDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { t } = useTranslation();
   const [app, setApp] = useState<VibeApp | null>(null);
   const [loading, setLoading] = useState(true);
   const [upvoted, setUpvoted] = useState(false);
@@ -67,15 +69,15 @@ export const AppDetail = () => {
   }, [slug]);
 
   if (loading) {
-    return <div className="container" style={{ padding: 'var(--space-8)' }}>Loading app details…</div>;
+    return <div className="container" style={{ padding: 'var(--space-8)' }}>{t('appDetail.loading')}</div>;
   }
 
   if (!app) {
     return (
       <div className="container" style={{ textAlign: 'center', padding: 'var(--space-16) 0' }}>
         <p style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--space-4)' }}>🔍</p>
-        <h1 style={{ marginBottom: 'var(--space-4)' }}>App Not Found</h1>
-        <Link to="/" style={{ color: 'var(--accent-secondary)' }}>← Back to Marketplace</Link>
+        <h1 style={{ marginBottom: 'var(--space-4)' }}>{t('appDetail.notFound')}</h1>
+        <Link to="/" style={{ color: 'var(--accent-secondary)' }}>{t('appDetail.back')}</Link>
       </div>
     );
   }
@@ -101,7 +103,7 @@ export const AppDetail = () => {
         }}
       >
         <ArrowLeft size={16} />
-        Back to Marketplace
+        {t('appDetail.back')}
       </Link>
 
       {/* ── Hero Screenshot ── */}
@@ -149,14 +151,14 @@ export const AppDetail = () => {
           </p>
 
           {/* What it does */}
-          <Section icon={<Layers size={20} color="var(--accent-base)" />} title="What it does">
+          <Section icon={<Layers size={20} color="var(--accent-base)" />} title={t('appDetail.whatItDoes')}>
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.75, margin: 0 }}>
               {app.longDescription}
             </p>
           </Section>
 
           {/* How to use */}
-          <Section icon={<Users size={20} color="var(--accent-secondary)" />} title="How to use it">
+          <Section icon={<Users size={20} color="var(--accent-secondary)" />} title={t('appDetail.howToUse')}>
             <ol style={{ color: 'var(--text-secondary)', lineHeight: 2, paddingLeft: 'var(--space-6)', margin: 0 }}>
               <li>Click <strong style={{ color: 'var(--text-primary)' }}>Live Demo</strong> to try it in your browser instantly — no sign-up required.</li>
               <li>Explore the source code on GitHub to understand how it was vibe-coded.</li>
@@ -165,7 +167,7 @@ export const AppDetail = () => {
           </Section>
 
           {/* Tech Stack */}
-          <Section icon={<Tag size={20} color="var(--accent-tertiary)" />} title="Tech Stack Used">
+          <Section icon={<Tag size={20} color="var(--accent-tertiary)" />} title={t('appDetail.techStack')}>
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {app.techStack.map(tech => (
                 <span
@@ -187,7 +189,7 @@ export const AppDetail = () => {
           </Section>
 
           {/* Tags */}
-          <Section icon={<Tag size={20} color="var(--text-tertiary)" />} title="Tags">
+          <Section icon={<Tag size={20} color="var(--text-tertiary)" />} title={t('appDetail.tags')}>
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {app.tags.map(tag => (
                 <span key={tag} style={{
@@ -220,7 +222,7 @@ export const AppDetail = () => {
             }}
           >
             <ExternalLink size={18} />
-            Live Demo
+            {t('appDetail.liveDemo')}
           </a>
           <a
             href={app.repoUrl}
@@ -237,7 +239,7 @@ export const AppDetail = () => {
             }}
           >
             <Code2 size={18} />
-            Source Code
+            {t('appDetail.sourceCode')}
           </a>
 
           {/* Upvote */}
@@ -258,12 +260,12 @@ export const AppDetail = () => {
             }}
           >
             <ArrowUp size={18} />
-            {upvoted ? 'Upvoted' : 'Upvote'} · {votes}
+            {upvoted ? t('appDetail.upvoted') : t('appDetail.upvote')} · {votes}
           </button>
 
           {/* App meta card */}
           <div className="glass-panel" style={{ padding: 'var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-            <MetaRow label="Creator">
+            <MetaRow label={t('appDetail.creator')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                 <span style={{
                   width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
@@ -277,12 +279,12 @@ export const AppDetail = () => {
                 </span>
               </div>
             </MetaRow>
-            <MetaRow label="Category">
+            <MetaRow label={t('appDetail.category')}>
               <span style={{ color: categoryColor, fontWeight: 600, fontSize: 'var(--text-sm)' }}>
                 {app.category}
               </span>
             </MetaRow>
-            <MetaRow label="Published">
+            <MetaRow label={t('appDetail.published')}>
               <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
                 {new Date(app.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </span>
@@ -303,7 +305,7 @@ export const AppDetail = () => {
               textDecoration: 'none',
             }}
           >
-            Share on LinkedIn
+            {t('appDetail.shareLinkedIn')}
           </a>
         </aside>
       </div>

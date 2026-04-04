@@ -3,11 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Zap, Eye, EyeOff } from 'lucide-react';
 import { SSOButtons } from '../components/auth/SSOButtons';
 import { useVibeAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import styles from './Auth.module.css';
 
 export const Login = () => {
   const { signInWithEmail } = useVibeAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -35,12 +37,12 @@ export const Login = () => {
           <span>VibeMarket</span>
         </div>
 
-        <h1 className={styles.heading}>Welcome back</h1>
-        <p className={styles.sub}>Sign in to your account to continue</p>
+        <h1 className={styles.heading}>{t('login.title')}</h1>
+        <p className={styles.sub}>{t('login.subtitle')}</p>
 
         <SSOButtons />
 
-        <div className={styles.divider}><span>or continue with email</span></div>
+        <div className={styles.divider}><span>{t('login.orEmail')}</span></div>
 
         {error && (
           <div className={styles.errorBox}>{error}</div>
@@ -48,7 +50,7 @@ export const Login = () => {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className={styles.field}>
-            <label htmlFor="login-email" className={styles.label}>Email</label>
+            <label htmlFor="login-email" className={styles.label}>{t('login.email')}</label>
             <div className={styles.inputWrapper}>
               <Mail size={16} className={styles.inputIcon} />
               <input
@@ -58,7 +60,7 @@ export const Login = () => {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder={t('login.placeholder.email')}
                 className={styles.input}
               />
             </div>
@@ -66,8 +68,8 @@ export const Login = () => {
 
           <div className={styles.field}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <label htmlFor="login-password" className={styles.label}>Password</label>
-              <a href="#" className={styles.forgotLink}>Forgot password?</a>
+              <label htmlFor="login-password" className={styles.label}>{t('login.password')}</label>
+              <a href="#" className={styles.forgotLink}>{t('login.forgotPassword')}</a>
             </div>
             <div className={styles.inputWrapper}>
               <Lock size={16} className={styles.inputIcon} />
@@ -78,7 +80,7 @@ export const Login = () => {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={t('login.placeholder.password')}
                 className={styles.input}
                 style={{ paddingRight: '2.75rem' }}
               />
@@ -86,7 +88,7 @@ export const Login = () => {
                 type="button"
                 onClick={() => setShowPw(p => !p)}
                 className={styles.eyeBtn}
-                aria-label={showPw ? 'Hide password' : 'Show password'}
+                aria-label={showPw ? t('login.hidePassword') : t('login.showPassword')}
               >
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -94,13 +96,13 @@ export const Login = () => {
           </div>
 
           <button id="login-submit" type="submit" className={styles.submitBtn} disabled={loading}>
-            {loading ? <span className={styles.spinner} /> : 'Sign In'}
+            {loading ? <span className={styles.spinner} /> : t('login.signIn')}
           </button>
         </form>
 
         <p className={styles.switchText}>
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className={styles.switchLink}>Create one</Link>
+          {t('login.noAccount')}{' '}
+          <Link to="/register" className={styles.switchLink}>{t('login.createAccount')}</Link>
         </p>
       </div>
     </div>

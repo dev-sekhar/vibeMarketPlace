@@ -1,18 +1,24 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Globe, Zap, LogIn, LogOut, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Globe, Zap, LogIn, LogOut, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useVibeAuth } from '../../context/AuthContext';
 
 export const Navbar = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut, loading } = useVibeAuth();
+  const { t, i18n } = useTranslation();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
 
-  const isAuthPage = ['/login', '/register'].includes(location.pathname);
+  const handleLanguageChange = () => {
+    const languages = ['en', 'es', 'zh'];
+    const currentIndex = languages.indexOf(i18n.language);
+    const nextIndex = (currentIndex + 1) % languages.length;
+    i18n.changeLanguage(languages[nextIndex]);
+  };
 
   return (
     <nav
@@ -31,36 +37,31 @@ export const Navbar = () => {
       {/* Brand */}
       <Link to="/" id="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
         <Zap color="var(--accent-secondary)" fill="var(--accent-secondary)" size={22} />
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)' }}>VibeMarket</span>
+        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)' }}>{t('nav.brand')}</span>
       </Link>
-
-      {/* Search — hidden on auth pages */}
-      {!isAuthPage && (
-        <div style={{ flex: 1, maxWidth: '460px', display: 'flex', alignItems: 'center', position: 'relative' }}>
-          <Search size={16} color="var(--text-tertiary)" style={{ position: 'absolute', left: 'var(--space-3)', pointerEvents: 'none' }} />
-          <input
-            id="nav-search"
-            type="search"
-            placeholder="Search apps…"
-            aria-label="Search all apps"
-            style={{
-              width: '100%', background: 'var(--bg-surface-elevated)',
-              border: '1px solid var(--border-strong)', color: 'var(--text-primary)',
-              padding: 'var(--space-2) var(--space-4) var(--space-2) 2.25rem',
-              borderRadius: 'var(--radius-full)', outline: 'none',
-              fontSize: 'var(--text-sm)', fontFamily: 'var(--font-primary)',
-              transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
-            }}
-            onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent-secondary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(168,85,247,0.2)'; }}
-            onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.boxShadow = 'none'; }}
-          />
-        </div>
-      )}
 
       {/* Right side */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexShrink: 0 }}>
-        <button id="nav-lang" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', fontWeight: 500 }} aria-label="Switch language">
-          <Globe size={16} />EN
+        <button
+          id="nav-lang"
+          onClick={handleLanguageChange}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-1)',
+            color: 'var(--text-secondary)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 500,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 'var(--space-1)',
+            borderRadius: 'var(--radius-sm)',
+          }}
+          aria-label="Switch language"
+        >
+          <Globe size={16} />
+          {i18n.language.toUpperCase()}
         </button>
 
         {!loading && (
@@ -92,7 +93,7 @@ export const Navbar = () => {
                   transition: 'all var(--transition-fast)',
                 }}
               >
-                <LogOut size={14} />Sign Out
+                <LogOut size={14} />{t('nav.signOut')}
               </button>
             </>
           ) : (
@@ -104,7 +105,7 @@ export const Navbar = () => {
               background: 'var(--bg-surface-elevated)',
               display: 'flex', alignItems: 'center', gap: 'var(--space-1)',
             }}>
-              <LogIn size={14} />Sign In
+              <LogIn size={14} />{t('nav.login')}
             </Link>
           )
         )}
@@ -116,7 +117,7 @@ export const Navbar = () => {
           borderRadius: 'var(--radius-full)', fontWeight: 700, fontSize: 'var(--text-sm)',
           boxShadow: 'var(--shadow-glow)',
         }}>
-          Submit App
+          {t('nav.submitApp')}
         </Link>
       </div>
     </nav>

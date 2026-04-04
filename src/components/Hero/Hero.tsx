@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Search, Sparkles, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface HeroProps {
   onSearch: (query: string) => void;
@@ -9,6 +10,7 @@ interface HeroProps {
 export const Hero = ({ onSearch }: HeroProps) => {
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -24,6 +26,10 @@ export const Hero = ({ onSearch }: HeroProps) => {
         textAlign: 'center',
         padding: 'var(--space-20) var(--space-4) var(--space-16)',
         overflow: 'hidden',
+        height: '50vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       {/* Animated background orbs */}
@@ -73,7 +79,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
             color: 'var(--accent-secondary)',
             letterSpacing: '0.06em',
           }}>
-            The Open-Source Vibe Coding Directory
+            {t('hero.eyebrow')}
           </span>
         </div>
 
@@ -85,9 +91,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
           fontFamily: 'var(--font-display)',
           letterSpacing: '-0.03em',
         }}>
-          Discover Tools{' '}
-          <br />
-          <span className="text-gradient">Built by AI</span>
+          {t('hero.headline')}
         </h1>
 
         {/* Sub-headline */}
@@ -98,8 +102,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
           margin: '0 auto var(--space-10)',
           lineHeight: 1.6,
         }}>
-          Explore apps created by the global community of vibe coders.
-          Find your next obsession or share what you've built.
+          {t('hero.subheadline')}
         </p>
 
         {/* Hero Search Bar */}
@@ -128,7 +131,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
             type="search"
             value={query}
             onChange={handleChange}
-            placeholder="Search apps by name, vibe, or category…"
+            placeholder={t('hero.search.placeholder')}
             aria-label="Search apps"
             style={{
               flex: 1,
@@ -144,7 +147,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
             <button
               onClick={() => { setQuery(''); onSearch(''); inputRef.current?.focus(); }}
               style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}
-              aria-label="Clear search"
+              aria-label={t('hero.search.clear')}
             >
               ✕
             </button>
@@ -165,7 +168,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
               textDecoration: 'none', transition: 'transform var(--transition-fast)',
             }}
           >
-            Submit Your App
+            {t('hero.cta.submit')}
             <ArrowRight size={16} />
           </Link>
           <a
@@ -181,7 +184,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
               transition: 'border-color var(--transition-fast), background var(--transition-fast)',
             }}
           >
-            Explore Apps
+            {t('hero.cta.explore')}
           </a>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUp, ExternalLink, Code2, Tag } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { VibeApp } from '../../types/app';
 import styles from './AppCard.module.css';
 
@@ -22,6 +23,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export const AppCard = ({ app, onUpvote }: AppCardProps) => {
   const [upvoted, setUpvoted] = useState(false);
   const [votes, setVotes] = useState(app.upvotes);
+  const { t } = useTranslation();
   const categoryColor = CATEGORY_COLORS[app.category] ?? '#6e6e77';
 
   console.log(`[AppCard] Rendering ${app.name} with thumbnail: ${app.thumbnail}`);
@@ -50,27 +52,29 @@ export const AppCard = ({ app, onUpvote }: AppCardProps) => {
           <span className={styles.featuredBadge}>⚡ Featured</span>
         )}
         <div className={styles.thumbnailOverlay}>
-          <a
-            href={app.demoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.overlayBtn}
-            aria-label={`Live demo of ${app.name}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink size={16} />
-            Live Demo
-          </a>
+          {app.demoUrl && (
+            <a
+              href={app.demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.overlayBtn}
+              aria-label={`${t('appCard.liveDemo')} of ${app.name}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink size={16} />
+              {t('appCard.liveDemo')}
+            </a>
+          )}
           <a
             href={app.repoUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.overlayBtn}
-            aria-label={`Source code of ${app.name}`}
+            aria-label={`${t('appCard.source')} of ${app.name}`}
             onClick={(e) => e.stopPropagation()}
           >
             <Code2 size={16} />
-            Source
+            {t('appCard.source')}
           </a>
         </div>
       </div>
@@ -89,7 +93,7 @@ export const AppCard = ({ app, onUpvote }: AppCardProps) => {
             <button
               className={`${styles.upvoteBtn} ${upvoted ? styles.upvoted : ''}`}
               onClick={handleUpvote}
-              aria-label={`Upvote ${app.name}`}
+              aria-label={t('appCard.upvote', { name: app.name })}
               aria-pressed={upvoted}
             >
               <ArrowUp size={14} />

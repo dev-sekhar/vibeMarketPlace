@@ -4,6 +4,7 @@ import {
   AppWindow, Link2, FileText, Image, ChevronRight, ChevronLeft,
   Check, Rocket, Info, LogIn
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { AppCategory } from '../types/app';
 import { useVibeAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -12,6 +13,16 @@ import styles from './Submit.module.css';
 const CATEGORIES: AppCategory[] = [
   'Web App', 'CLI Tool', 'Productivity', 'Game', 'Developer Tool', 'Finance', 'AI Assistant',
 ];
+
+const CATEGORY_TRANSLATION_KEY: Record<AppCategory, string> = {
+  'Web App': 'category.webApp',
+  'CLI Tool': 'category.cliTool',
+  'Productivity': 'category.productivity',
+  'Game': 'category.game',
+  'Developer Tool': 'category.developerTool',
+  'Finance': 'category.finance',
+  'AI Assistant': 'category.aiAssistant',
+};
 
 interface FormData {
   appName: string;
@@ -34,13 +45,14 @@ const EMPTY_FORM: FormData = {
 };
 
 const STEPS = [
-  { id: 1, label: 'App Info', icon: AppWindow },
-  { id: 2, label: 'Links', icon: Link2 },
-  { id: 3, label: 'Description', icon: FileText },
-  { id: 4, label: 'Media', icon: Image },
+  { id: 1, label: 'submit.step.appInfo', icon: AppWindow },
+  { id: 2, label: 'submit.step.links', icon: Link2 },
+  { id: 3, label: 'submit.step.description', icon: FileText },
+  { id: 4, label: 'submit.step.media', icon: Image },
 ];
 
 export const Submit = () => {
+  const { t } = useTranslation();
   const { user } = useVibeAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -158,23 +170,23 @@ export const Submit = () => {
             <Check size={36} color="#fff" strokeWidth={2.5} />
           </div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-3xl)', marginBottom: 'var(--space-3)' }}>
-            🚀 You&apos;re live!
+            {t('submit.confirm.title')}
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-8)' }}>
-            <strong style={{ color: 'var(--text-primary)' }}>{form.appName}</strong> has been published to the marketplace.
+            <strong style={{ color: 'var(--text-primary)' }}>{form.appName}</strong> {t('submit.confirm.message')}
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
               onClick={() => navigate('/')}
               style={{ background: 'var(--gradient-neon)', color: '#fff', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)', fontWeight: 700, boxShadow: 'var(--shadow-glow)', border: 'none', cursor: 'pointer' }}
             >
-              Browse Marketplace
+              {t('submit.confirm.browseMarketplace')}
             </button>
             <button
               onClick={() => { setSubmitted(false); setForm(EMPTY_FORM); setStep(1); }}
               style={{ background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)', fontWeight: 600, cursor: 'pointer' }}
             >
-              Submit Another
+              {t('submit.confirm.submitAnother')}
             </button>
           </div>
         </div>
@@ -187,10 +199,10 @@ export const Submit = () => {
       <div className={styles.inner}>
         <div className={styles.header}>
           <h1 className={styles.title}>
-            Submit Your <span className="text-gradient">Vibe-Coded App</span>
+            {t('submit.page.title')}
           </h1>
           <p className={styles.subtitle}>
-            Share what you've built with the community. Apps go live immediately.
+            {t('submit.page.subtitle')}
           </p>
         </div>
 
@@ -204,11 +216,11 @@ export const Submit = () => {
               <div key={s.id} className={styles.stepItem}>
                 <div
                   className={`${styles.stepDot} ${done ? styles.done : ''} ${active ? styles.active : ''}`}
-                  role="tab" aria-selected={active} aria-label={`Step ${s.id}: ${s.label}`}
+                  role="tab" aria-selected={active} aria-label={`${t('submit.step.titlePrefix')} ${s.id}: ${t(s.label)}`}
                 >
                   {done ? <Check size={14} /> : <Icon size={14} />}
                 </div>
-                <span className={`${styles.stepLabel} ${active ? styles.stepLabelActive : ''}`}>{s.label}</span>
+                <span className={`${styles.stepLabel} ${active ? styles.stepLabelActive : ''}`}>{t(s.label)}</span>
                 {i < STEPS.length - 1 && <div className={`${styles.stepLine} ${done ? styles.stepLineDone : ''}`} />}
               </div>
             );
@@ -217,73 +229,73 @@ export const Submit = () => {
 
         <div className={`glass-panel ${styles.card}`}>
           {step === 1 && (
-            <StepWrap title="Tell us about your app">
-              <Field label="App Name *" hint="Keep it catchy and memorable">
-                <input id="submit-app-name" type="text" className={styles.input} placeholder="e.g. ReviewBot AI" value={form.appName} onChange={e => set('appName', e.target.value)} maxLength={60} />
+            <StepWrap title={t('submit.section.appInfo')}>
+              <Field label={t('submit.field.appName')} hint={t('submit.field.appNameHint')}>
+                <input id="submit-app-name" type="text" className={styles.input} placeholder={t('submit.placeholder.appName')} value={form.appName} onChange={e => set('appName', e.target.value)} maxLength={60} />
               </Field>
-              <Field label="Category *" hint="Pick the best fit">
+              <Field label={t('submit.field.category')} hint={t('submit.field.categoryHint')}>
                 <select id="submit-category" className={styles.input} value={form.category} onChange={e => set('category', e.target.value)}>
-                  <option value="">Select a category…</option>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="">{t('submit.field.categorySelect')}</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{t(CATEGORY_TRANSLATION_KEY[c])}</option>)}
                 </select>
               </Field>
-              <Field label="Tech Stack" hint="Comma-separated (e.g. React, TypeScript, Supabase)">
-                <input id="submit-tech-stack" type="text" className={styles.input} placeholder="React, TypeScript, OpenAI API" value={form.techStack} onChange={e => set('techStack', e.target.value)} />
+              <Field label={t('submit.field.techStack')} hint={t('submit.field.techStackHint')}>
+                <input id="submit-tech-stack" type="text" className={styles.input} placeholder={t('submit.placeholder.techStack')} value={form.techStack} onChange={e => set('techStack', e.target.value)} />
               </Field>
-              <Field label="Tags" hint="Comma-separated keywords for discovery">
-                <input id="submit-tags" type="text" className={styles.input} placeholder="AI, Productivity, Open Source" value={form.tags} onChange={e => set('tags', e.target.value)} />
+              <Field label={t('submit.field.tags')} hint={t('submit.field.tagsHint')}>
+                <input id="submit-tags" type="text" className={styles.input} placeholder={t('submit.placeholder.tags')} value={form.tags} onChange={e => set('tags', e.target.value)} />
               </Field>
             </StepWrap>
           )}
 
           {step === 2 && (
-            <StepWrap title="Where can people find it?">
-              <Field label="Repository URL *" hint="GitHub, GitLab, or any public repo">
-                <input id="submit-repo-url" type="url" className={styles.input} placeholder="https://github.com/your/project" value={form.repoUrl} onChange={e => set('repoUrl', e.target.value)} />
+            <StepWrap title={t('submit.section.links')}>
+              <Field label={t('submit.field.repoUrl')} hint={t('submit.field.repoUrlHint')}>
+                <input id="submit-repo-url" type="url" className={styles.input} placeholder={t('submit.placeholder.repoUrl')} value={form.repoUrl} onChange={e => set('repoUrl', e.target.value)} />
               </Field>
-              <Field label="Live App URL" hint="Link to the deployed demo (optional)">
-                <input id="submit-app-url" type="url" className={styles.input} placeholder="https://your-app.vercel.app" value={form.appUrl} onChange={e => set('appUrl', e.target.value)} />
+              <Field label={t('submit.field.appUrl')} hint={t('submit.field.appUrlHint')}>
+                <input id="submit-app-url" type="url" className={styles.input} placeholder={t('submit.placeholder.appUrl')} value={form.appUrl} onChange={e => set('appUrl', e.target.value)} />
               </Field>
               <div className={styles.infoBox}>
                 <Info size={15} color="var(--accent-base)" style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                  Your app goes live <strong style={{ color: 'var(--text-primary)' }}>immediately</strong> via our post-moderation model.
+                  {t('submit.info.liveImmediately')}
                 </p>
               </div>
             </StepWrap>
           )}
 
           {step === 3 && (
-            <StepWrap title="Describe what you built">
-              <Field label="Short Description *" hint={`One punchy line. ${form.shortDescription.length}/120 chars`}>
-                <input id="submit-short-desc" type="text" className={styles.input} placeholder="AI-powered code reviewer that gives inline suggestions…" value={form.shortDescription} onChange={e => set('shortDescription', e.target.value)} maxLength={120} />
+            <StepWrap title={t('submit.section.description')}>
+              <Field label={t('submit.field.shortDescription')} hint={t('submit.field.shortDescriptionHint', { count: form.shortDescription.length })}>
+                <input id="submit-short-desc" type="text" className={styles.input} placeholder={t('submit.placeholder.shortDescription')} value={form.shortDescription} onChange={e => set('shortDescription', e.target.value)} maxLength={120} />
               </Field>
-              <Field label="Full Description *" hint={`${form.longDescription.length} chars — aim for 100+`}>
-                <textarea id="submit-long-desc" className={`${styles.input} ${styles.textarea}`} placeholder="Describe what your app does, why you built it, and what makes it special…" value={form.longDescription} onChange={e => set('longDescription', e.target.value)} rows={5} />
+              <Field label={t('submit.field.fullDescription')} hint={t('submit.field.fullDescriptionHint', { count: form.longDescription.length })}>
+                <textarea id="submit-long-desc" className={`${styles.input} ${styles.textarea}`} placeholder={t('submit.placeholder.longDescription')} value={form.longDescription} onChange={e => set('longDescription', e.target.value)} rows={5} />
               </Field>
             </StepWrap>
           )}
 
           {step === 4 && (
-            <StepWrap title="Upload a thumbnail">
+            <StepWrap title={t('submit.section.media')}>
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-5)' }}>
-                Recommended: <strong style={{ color: 'var(--text-primary)' }}>1280×720</strong> (16:9).
+                {t('submit.media.recommendation')}
               </p>
               <label htmlFor="submit-thumbnail" className={`${styles.dropzone} ${form.thumbnailPreview ? styles.dropzoneHasImage : ''}`}>
                 {form.thumbnailPreview ? (
-                  <img src={form.thumbnailPreview} alt="Thumbnail preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-lg)' }} />
+                  <img src={form.thumbnailPreview} alt={t('submit.media.thumbnailPreviewAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-lg)' }} />
                 ) : (
                   <div className={styles.dropzoneInner}>
                     <Image size={36} color="var(--text-tertiary)" />
-                    <p style={{ margin: 'var(--space-3) 0 var(--space-1)', fontWeight: 600 }}>Drop your image here</p>
-                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>PNG, JPG, WebP up to 5 MB</p>
+                    <p style={{ margin: 'var(--space-3) 0 var(--space-1)', fontWeight: 600 }}>{t('submit.media.dropHere')}</p>
+                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>{t('submit.media.uploadHelp')}</p>
                   </div>
                 )}
                 <input id="submit-thumbnail" type="file" accept="image/png,image/jpeg,image/webp" className={styles.fileInput} onChange={handleFile} />
               </label>
               {form.thumbnailPreview && (
                 <button type="button" onClick={() => setForm(p => ({ ...p, thumbnailFile: null, thumbnailPreview: '' }))} style={{ fontSize: 'var(--text-sm)', color: 'var(--accent-tertiary)', marginTop: 'var(--space-3)' }}>
-                  Remove image
+                  {t('submit.media.removeImage')}
                 </button>
               )}
             </StepWrap>
@@ -298,17 +310,17 @@ export const Submit = () => {
           <div className={styles.nav}>
             {step > 1 ? (
               <button id="submit-back" type="button" className={styles.backBtn} onClick={() => setStep(s => s - 1)}>
-                <ChevronLeft size={16} /> Back
+                <ChevronLeft size={16} /> {t('submit.button.back')}
               </button>
             ) : <span />}
 
             {step < 4 ? (
               <button id="submit-next" type="button" className={styles.nextBtn} onClick={() => setStep(s => s + 1)} disabled={!canProceed()}>
-                Next <ChevronRight size={16} />
+                {t('submit.button.next')} <ChevronRight size={16} />
               </button>
             ) : (
               <button id="submit-publish" type="button" className={styles.publishBtn} onClick={handleSubmit} disabled={loading}>
-                {loading ? <><span className={styles.spinner} /> Publishing…</> : <><Rocket size={16} /> Publish App</>}
+                {loading ? <><span className={styles.spinner} /> {t('submit.button.publishing')}</> : <><Rocket size={16} /> {t('submit.button.publish')}</>}
               </button>
             )}
           </div>

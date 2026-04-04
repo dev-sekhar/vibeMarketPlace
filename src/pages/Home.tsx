@@ -3,10 +3,17 @@ import { Hero } from '../components/Hero/Hero';
 import { StatsBar } from '../components/StatsBar/StatsBar';
 import { AppCard } from '../components/AppCard/AppCard';
 import { supabase } from '../lib/supabaseClient';
+import { useTranslation } from 'react-i18next';
 import type { VibeApp, AppCategory } from '../types/app';
 
-const ALL_CATEGORIES: AppCategory[] = [
-  'Web App', 'CLI Tool', 'Productivity', 'Game', 'Developer Tool', 'Finance', 'AI Assistant',
+const ALL_CATEGORIES: { key: AppCategory; translationKey: string }[] = [
+  { key: 'Web App', translationKey: 'category.webApp' },
+  { key: 'CLI Tool', translationKey: 'category.cliTool' },
+  { key: 'Productivity', translationKey: 'category.productivity' },
+  { key: 'Game', translationKey: 'category.game' },
+  { key: 'Developer Tool', translationKey: 'category.developerTool' },
+  { key: 'Finance', translationKey: 'category.finance' },
+  { key: 'AI Assistant', translationKey: 'category.aiAssistant' },
 ];
 
 export const Home = () => {
@@ -14,6 +21,7 @@ export const Home = () => {
   const [activeCategory, setActiveCategory] = useState<AppCategory | null>(null);
   const [apps, setApps] = useState<VibeApp[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     console.log('[Home] useEffect running - fetching apps...');
@@ -109,6 +117,36 @@ export const Home = () => {
       {/* ── Hero ── */}
       <Hero onSearch={setSearchQuery} />
 
+      {/* ── Platform Section ── */}
+      <section
+        style={{
+          padding: 'var(--space-16) var(--space-4)',
+          textAlign: 'center',
+          background: 'var(--bg-surface)',
+          borderBottom: '1px solid var(--border-subtle)',
+        }}
+      >
+        <div className="container">
+          <h2 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-3xl)',
+            fontWeight: 700,
+            marginBottom: 'var(--space-4)',
+          }}>
+            {t('platform.title')}
+          </h2>
+          <p style={{
+            fontSize: 'var(--text-lg)',
+            color: 'var(--text-secondary)',
+            maxWidth: '600px',
+            margin: '0 auto',
+            lineHeight: 1.6,
+          }}>
+            {t('platform.description')}
+          </p>
+        </div>
+      </section>
+
       <div className="container">
         {/* ── Stats Bar ── */}
         <StatsBar apps={apps} />
@@ -157,11 +195,11 @@ export const Home = () => {
           />
           {ALL_CATEGORIES.map(cat => (
             <FilterPill
-              key={cat}
-              label={cat}
-              id={`filter-${cat.toLowerCase().replace(/\s+/g, '-')}`}
-              active={activeCategory === cat}
-              onClick={() => setActiveCategory(prev => prev === cat ? null : cat)}
+              key={cat.key}
+              label={t(cat.translationKey)}
+              id={`filter-${cat.key.toLowerCase().replace(/\s+/g, '-')}`}
+              active={activeCategory === cat.key}
+              onClick={() => setActiveCategory(prev => prev === cat.key ? null : cat.key)}
             />
           ))}
         </section>
@@ -175,13 +213,13 @@ export const Home = () => {
         }}>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, margin: 0 }}>
             {searchQuery
-              ? <>Results for "<span className="text-gradient">{searchQuery}</span>"</>
+              ? <>{t('home.resultsFor')} "<span className="text-gradient">{searchQuery}</span>"</>
               : activeCategory
-                ? activeCategory
-                : 'All Apps'}
+                ? t(ALL_CATEGORIES.find(cat => cat.key === activeCategory)?.translationKey || '')
+                : t('home.allApps')}
           </h2>
           <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>
-            {filtered.length} {filtered.length === 1 ? 'app' : 'apps'}
+            {filtered.length} {filtered.length === 1 ? t('home.app') : t('home.apps')}
           </span>
         </div>
 
