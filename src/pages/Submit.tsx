@@ -37,6 +37,13 @@ interface FormData {
   techStack: string;
 }
 
+interface RepoValidationResponse {
+  pass: boolean;
+  errors: string[];
+  warnings: string[];
+  error?: string;
+}
+
 const EMPTY_FORM: FormData = {
   appName: '', category: '', repoUrl: '', appUrl: '',
   shortDescription: '', longDescription: '',
@@ -60,6 +67,9 @@ export const Submit = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+  const validatorBase = import.meta.env.VITE_VALIDATOR_API_URL ?? 'http://localhost:4000';
 
   const set = (field: keyof FormData, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }));
@@ -85,6 +95,48 @@ export const Submit = () => {
     if (!user) return;
     setLoading(true);
     setSubmitError(null);
+    setValidationErrors([]);
+    setValidationWarnings([]);
+
+    if (form.repoUrl.trim()) {
+      try {
+        const response = await fetch(`${validatorBase}/validate-repo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repoUrl: form.repoUrl.trim() }),
+        });
+
+        let validation: RepoValidationResponse;
+        try {
+          validation = await response.json();
+        } catch (parseError) {
+          setSubmitError('We couldn\'t check your repository right now. Please try again in a moment.');
+          setLoading(false);
+          return;
+        }
+
+        if (!response.ok) {
+          setSubmitError(validation.error ?? 'We\'re having trouble validating your repository. Please check the URL and try again.');
+          setLoading(false);
+          return;
+        }
+
+        if (!validation.pass) {
+          setValidationErrors(validation.errors ?? ['Your repository didn\'t meet our requirements.']);
+          setSubmitError('Your repository needs a few adjustments. See the details above and try again.');
+          setLoading(false);
+          return;
+        }
+
+        if (validation.warnings.length) {
+          setValidationWarnings(validation.warnings);
+        }
+      } catch (error) {
+        setSubmitError('We couldn\'t access your repository. Please check: (1) Is the URL correct? (2) Is the repository public? (3) Is your internet connection working? Try again after verifying.');
+        setLoading(false);
+        return;
+      }
+    }
 
     let thumbnailUrl = '';
 
@@ -299,6 +351,24 @@ export const Submit = () => {
                 </button>
               )}
             </StepWrap>
+          )}
+
+          {validationErrors.length > 0 && (
+            <div className={styles.validationBox}>
+              <strong>Repository validation failed:</strong>
+              <ul>
+                {validationErrors.map((error, idx) => <li key={idx}>{error}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {validationWarnings.length > 0 && (
+            <div className={styles.validationWarningBox}>
+              <strong>Repository validation warnings:</strong>
+              <ul>
+                {validationWarnings.map((warning, idx) => <li key={idx}>{warning}</li>)}
+              </ul>
+            </div>
           )}
 
           {submitError && (

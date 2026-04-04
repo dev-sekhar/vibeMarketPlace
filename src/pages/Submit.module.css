@@ -153,6 +153,37 @@
   padding: var(--space-4);
 }
 
+.validationBox,
+.validationWarningBox {
+  margin-top: var(--space-4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.validationBox {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.validationWarningBox {
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  color: #f59e0b;
+}
+
+.validationBox ul,
+.validationWarningBox ul {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+}
+
+.validationBox li,
+.validationWarningBox li {
+  margin-bottom: var(--space-2);
+}
+
 /* ── Dropzone ── */
 .dropzone {
   display: flex;
@@ -279,7 +310,7 @@
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -287,5 +318,7 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
