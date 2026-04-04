@@ -3,6 +3,7 @@ import { ArrowLeft, ExternalLink, Code2, ArrowUp, Tag, Layers, Users } from 'luc
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useTranslation } from 'react-i18next';
+import { CommunityLinks } from '../components/CommunityLinks';
 import type { VibeApp } from '../types/app';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -47,6 +48,7 @@ export const AppDetail = () => {
           category: data.category as VibeApp['category'],
           tags: data.tags || [],
           techStack: data.tech_stack || [],
+          communityLinks: data.community_links || [],
           author: {
             name: data.author_name || 'Unknown',
             avatarInitials: (data.author_name || 'U').split(' ').map((p: string) => p[0]).join('').toUpperCase().slice(0, 2),
@@ -203,6 +205,9 @@ export const AppDetail = () => {
               ))}
             </div>
           </Section>
+
+          {/* Community Links */}
+          <CommunityLinks links={app.communityLinks} />
         </div>
 
         {/* ── RIGHT: Sidebar ── */}

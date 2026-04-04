@@ -1,3 +1,9 @@
+export interface CommunityLink {
+  platform: 'slack' | 'whatsapp' | 'telegram';
+  url: string;
+  label?: string;
+}
+
 export interface VibeApp {
   id: string;
   name: string;
@@ -8,6 +14,7 @@ export interface VibeApp {
   category: AppCategory;
   tags: string[];
   techStack: string[];
+  communityLinks?: CommunityLink[];
   author: {
     name: string;
     avatarInitials: string;

@@ -109,16 +109,6 @@ export const Navbar = () => {
             </Link>
           )
         )}
-
-        <Link to="/submit" id="nav-submit" style={{
-          display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)',
-          background: 'var(--gradient-neon)', color: '#fff',
-          padding: 'var(--space-2) var(--space-4)',
-          borderRadius: 'var(--radius-full)', fontWeight: 700, fontSize: 'var(--text-sm)',
-          boxShadow: 'var(--shadow-glow)',
-        }}>
-          {t('nav.submitApp')}
-        </Link>
       </div>
     </nav>
   );

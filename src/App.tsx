@@ -5,17 +5,19 @@ import { AppDetail } from './pages/AppDetail';
 import { Submit } from './pages/Submit';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Whitepapers } from './pages/Whitepapers';
 
 function App() {
   return (
     <Router>
       <Layout>
         <Routes>
-          <Route path="/"          element={<Home />} />
+          <Route path="/" element={<Home />} />
           <Route path="/app/:slug" element={<AppDetail />} />
-          <Route path="/submit"    element={<Submit />} />
-          <Route path="/login"     element={<Login />} />
-          <Route path="/register"  element={<Register />} />
+          <Route path="/submit" element={<Submit />} />
+          <Route path="/whitepapers" element={<Whitepapers />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </Layout>
     </Router>
