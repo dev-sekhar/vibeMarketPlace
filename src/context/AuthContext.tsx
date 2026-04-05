@@ -3,6 +3,15 @@ import type { ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 
+export interface GeoData {
+  city: string;
+  region: string;
+  country: string;
+  countryCode: string;
+  lat: number;
+  lng: number;
+}
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
@@ -12,7 +21,7 @@ interface AuthContextValue {
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<string | null>;
-  signUpWithEmail: (name: string, email: string, password: string) => Promise<string | null>;
+  signUpWithEmail: (name: string, email: string, password: string, geo?: GeoData) => Promise<string | null>;
   signOut: () => Promise<void>;
 }
 
@@ -86,11 +95,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return error?.message ?? null;
   };
 
-  const signUpWithEmail = async (name: string, email: string, password: string): Promise<string | null> => {
+  const signUpWithEmail = async (name: string, email: string, password: string, geo?: GeoData): Promise<string | null> => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: {
+        data: {
+          full_name: name,
+          ...(geo && {
+            geo_city: geo.city,
+            geo_region: geo.region,
+            geo_country: geo.country,
+            geo_country_code: geo.countryCode,
+            geo_lat: geo.lat,
+            geo_lng: geo.lng,
+            geo_registered_at: new Date().toISOString(),
+          }),
+        },
+      },
     });
     return error?.message ?? null;
   };

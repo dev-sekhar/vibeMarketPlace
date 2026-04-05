@@ -4,13 +4,13 @@ import { FileText, Plus, LogIn } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useVibeAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { RichTextEditor } from '../components/RichTextEditor/RichTextEditor';
 import styles from './Submit.module.css';
 
 interface FormData {
     title: string;
     description: string;
     content: string;
-    contentType: 'markdown' | 'html';
     appId: string;
 }
 
@@ -18,7 +18,6 @@ const EMPTY_FORM: FormData = {
     title: '',
     description: '',
     content: '',
-    contentType: 'markdown',
     appId: '',
 };
 
@@ -57,7 +56,7 @@ export const Whitepapers = () => {
             title: form.title,
             description: form.description,
             content: form.content,
-            content_type: form.contentType,
+            content_type: 'html',
             author_id: user.id,
             author_name: user.user_metadata?.full_name ?? user.email ?? 'Anonymous',
             app_id: form.appId || null,
@@ -189,27 +188,11 @@ export const Whitepapers = () => {
                                 <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 'var(--space-2)', color: 'var(--text-primary)' }}>
                                     {t('whitepaper.field.content')} *
                                 </label>
-                                <textarea
-                                    className={`${styles.input} ${styles.textarea}`}
-                                    placeholder={t('whitepaper.placeholder.content')}
-                                    value={form.content}
-                                    onChange={e => set('content', e.target.value)}
-                                    rows={10}
+                                <RichTextEditor
+                                    content={form.content}
+                                    onChange={html => set('content', html)}
+                                    placeholder="Tell your story… Add text, images, and videos."
                                 />
-                            </div>
-
-                            <div>
-                                <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 'var(--space-2)', color: 'var(--text-primary)' }}>
-                                    {t('whitepaper.field.format')}
-                                </label>
-                                <select
-                                    className={styles.input}
-                                    value={form.contentType}
-                                    onChange={e => set('contentType', e.target.value as 'markdown' | 'html')}
-                                >
-                                    <option value="markdown">Markdown</option>
-                                    <option value="html">HTML</option>
-                                </select>
                             </div>
 
                             {error && (

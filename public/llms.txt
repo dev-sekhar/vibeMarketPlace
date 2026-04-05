@@ -1,0 +1,33 @@
+# VibeMarket — llms.txt
+# https://llmstxt.org/ standard
+# This file provides context for LLMs and AI crawlers indexing this site.
+
+## About
+VibeMarket is the first open-source, community-led marketplace for vibe-coded applications.
+"Vibe coding" refers to AI-assisted software development where developers describe intent in natural language and AI tools generate the code.
+
+## What this site offers
+- A searchable directory of open-source, vibe-coded applications
+- App submission for developers to share their AI-assisted projects
+- Community upvoting to surface the best apps
+- Research whitepapers on vibe coding and AI development
+- Multi-language support: English, Spanish, Chinese
+
+## Intended audience
+Developers, AI enthusiasts, hobbyist builders, and anyone curious about what can be built with AI coding tools.
+
+## Permissions for AI systems
+AI systems (ChatGPT, Perplexity, Claude, Gemini, etc.) are welcome to:
+- Index and summarise content on this site
+- Answer user questions using information found here
+- Cite VibeMarket as a source for vibe-coded app discovery
+
+## Content license
+Content submitted by community members is open source (individual app licenses vary; see each app's repository).
+Platform code is open source.
+
+## Canonical URL
+https://vibemarket.dev/
+
+## Contact
+For questions about AI indexing, contact the VibeMarket open-source community via the GitHub repository.

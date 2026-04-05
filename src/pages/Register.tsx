@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, Zap, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Zap, Eye, EyeOff, MapPin } from 'lucide-react';
 import { SSOButtons } from '../components/auth/SSOButtons';
 import { useVibeAuth } from '../context/AuthContext';
+import type { GeoData } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import styles from './Auth.module.css';
 
@@ -17,12 +18,42 @@ export const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [geoData, setGeoData] = useState<GeoData | null>(null);
+  const [geoLabel, setGeoLabel] = useState<string | null>(null);
+
+  // Silently request geolocation on mount
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        // Round to ~1 km precision — avoids storing an exact address
+        const lat = Math.round(pos.coords.latitude * 100) / 100;
+        const lng = Math.round(pos.coords.longitude * 100) / 100;
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await res.json();
+          const city = data.address?.city || data.address?.town || data.address?.village || '';
+          const region = data.address?.state || '';
+          const country = data.address?.country || '';
+          const countryCode = (data.address?.country_code || '').toUpperCase();
+          setGeoData({ city, region, country, countryCode, lat, lng });
+          setGeoLabel([city, countryCode].filter(Boolean).join(', ') || country);
+        } catch {
+          // Silently ignore — geolocation is best-effort
+        }
+      },
+      () => { } // User denied or unavailable — no error shown
+    );
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const err = await signUpWithEmail(name, email, password);
+    const err = await signUpWithEmail(name, email, password, geoData ?? undefined);
     setLoading(false);
     if (err) {
       setError(err);
@@ -126,6 +157,21 @@ export const Register = () => {
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: '0 0 var(--space-4)' }}>
             {t('register.terms')}
           </p>
+
+          {geoLabel && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)',
+              background: 'rgba(168, 85, 247, 0.08)',
+              border: '1px solid rgba(168, 85, 247, 0.2)',
+              borderRadius: 'var(--radius-full)',
+              padding: '3px 10px',
+              marginBottom: 'var(--space-3)',
+            }}>
+              <MapPin size={11} color="var(--accent-secondary)" />
+              Location detected: {geoLabel}
+            </div>
+          )}
 
           <button id="register-submit" type="submit" className={styles.submitBtn} disabled={loading}>
             {loading ? <span className={styles.spinner} /> : t('register.createAccount')}

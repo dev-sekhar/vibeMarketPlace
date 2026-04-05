@@ -42,6 +42,118 @@
 
   <!-- Theme -->
   <meta name="theme-color" content="#a855f7" />
+
+  <!-- GEO: Generative Engine Optimization -->
+  <!-- Tell AI crawlers this content is freely indexable and citable -->
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+  <!-- Perplexity, ChatGPT & AI search bots — explicit allow -->
+  <meta name="perplexitybot" content="index, follow" />
+  <meta name="gptbot" content="index, follow" />
+  <meta name="anthropic-ai" content="index, follow" />
+  <meta name="ccbot" content="index, follow" />
+
+  <!-- Declare content type for generative AI context -->
+  <meta name="classification" content="Technology, Software, Open Source, Marketplace" />
+  <meta name="category" content="App Discovery, Vibe Coding, AI Tools" />
+  <meta name="coverage" content="Worldwide" />
+  <meta name="revisit-after" content="3 days" />
+  <meta name="language" content="English" />
+  <meta name="rating" content="General" />
+
+  <!-- JSON-LD: WebSite + Sitelinks Searchbox (used by Google SGE & AI engines) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "VibeMarket",
+    "alternateName": "Vibe Market",
+    "url": "https://vibemarket.dev/",
+    "description": "The open-source community marketplace for vibe-coded apps. Discover, upvote, and share AI-assisted applications built by developers around the world.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://vibemarket.dev/?q={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- JSON-LD: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "VibeMarket",
+    "url": "https://vibemarket.dev/",
+    "logo": "https://vibemarket.dev/favicon.svg",
+    "sameAs": [],
+    "description": "VibeMarket is the first open-source, community-led marketplace for vibe-coded applications. Builders share their codebases; the community discovers, forks, and builds on them.",
+    "foundingDate": "2025",
+    "keywords": "vibe coding, vibe-coded apps, open source marketplace, AI app directory, community apps"
+  }
+  </script>
+
+  <!-- JSON-LD: SoftwareApplication (the platform itself) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "VibeMarket",
+    "applicationCategory": "WebApplication",
+    "operatingSystem": "Any",
+    "url": "https://vibemarket.dev/",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "A free, open-source platform for discovering and sharing vibe-coded apps built by the global developer community.",
+    "featureList": [
+      "Browse vibe-coded applications",
+      "Submit open-source apps",
+      "Upvote community favourites",
+      "Search by name, category, and tech stack",
+      "Research whitepapers on vibe coding"
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD: FAQPage — high-value AI citation target -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is vibe coding?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Vibe coding is a style of software development where developers describe what they want in natural language and AI tools (like Cursor, Copilot, or Claude) generate most or all of the code. The developer guides the 'vibe' — the intent and design — while AI handles implementation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is VibeMarket?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "VibeMarket is the first open-source, community-led marketplace for vibe-coded apps. Developers submit their AI-assisted projects, and the community can discover, upvote, and build on them."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I submit an app to VibeMarket?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Create a free account, go to the Submit App page, fill in your app name, repository URL, category, and description, then publish. Apps go live immediately via a post-moderation model."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
