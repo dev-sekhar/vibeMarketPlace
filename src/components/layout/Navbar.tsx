@@ -1,7 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Globe, Zap, LogIn, LogOut, User, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from 'react';
 import { useVibeAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
+import { getBadge } from '../../lib/badge';
 
 const formatTimeLeft = (seconds: number): string => {
   const m = Math.floor(seconds / 60);
@@ -13,6 +16,18 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const { user, signOut, loading, sessionTimeLeft, isSessionExpiring } = useVibeAuth();
   const { t, i18n } = useTranslation();
+  const [appCount, setAppCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!user) { setAppCount(0); return; }
+    supabase
+      .from('apps')
+      .select('id', { count: 'exact', head: true })
+      .eq('author_id', user.id)
+      .then(({ count }) => setAppCount(count ?? 0));
+  }, [user?.id]);
+
+  const badge = getBadge(appCount);
 
   const handleSignOut = async () => {
     await signOut();
@@ -57,6 +72,16 @@ export const Navbar = () => {
           textDecoration: 'none',
         }}>
           {t('nav.whitepapers')}
+        </Link>
+        <Link to="/templates" id="nav-templates" style={{
+          fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-secondary)',
+          padding: 'var(--space-2) var(--space-3)',
+          borderRadius: 'var(--radius-full)', border: '1px solid var(--border-strong)',
+          background: 'var(--bg-surface-elevated)',
+          display: 'flex', alignItems: 'center', gap: 'var(--space-1)',
+          textDecoration: 'none',
+        }}>
+          {t('nav.templates')}
         </Link>
         <button
           id="nav-lang"
@@ -111,6 +136,23 @@ export const Navbar = () => {
                 <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {user.user_metadata?.full_name ?? user.email?.split('@')[0]}
                 </span>
+                {badge && (
+                  <span
+                    title={`${badge.label} — ${badge.description}`}
+                    style={{
+                      fontSize: 'var(--text-xs)', fontWeight: 700,
+                      color: badge.textColor,
+                      background: badge.color,
+                      border: `1px solid ${badge.borderColor}`,
+                      borderRadius: 'var(--radius-full)',
+                      padding: '1px 8px',
+                      cursor: 'default',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {badge.emoji} {badge.label}
+                  </span>
+                )}
               </div>
               <button
                 id="nav-signout"

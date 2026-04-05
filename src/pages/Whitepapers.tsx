@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Plus, LogIn, ArrowLeft, Clock, User } from 'lucide-react';
+import { FileText, Plus, LogIn, ArrowLeft, Clock, User, Rocket } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useVibeAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { RichTextEditor } from '../components/RichTextEditor/RichTextEditor';
+import { getBadge, getNextBadge } from '../lib/badge';
 import styles from './Submit.module.css';
 
 interface Whitepaper {
@@ -52,6 +53,17 @@ export const Whitepapers = () => {
     const [error, setError] = useState<string | null>(null);
     const [publishingStage, setPublishingStage] = useState('');
     const [publishingPercent, setPublishingPercent] = useState(0);
+    const [appCount, setAppCount] = useState<number | null>(null);
+
+    // Fetch the logged-in user's app count to gate publishing and show badge
+    useEffect(() => {
+        if (!user) { setAppCount(null); return; }
+        supabase
+            .from('apps')
+            .select('id', { count: 'exact', head: true })
+            .eq('author_id', user.id)
+            .then(({ count }) => setAppCount(count ?? 0));
+    }, [user?.id]);
 
     const fetchWhitepapers = async () => {
         setFetchLoading(true);
@@ -187,6 +199,11 @@ export const Whitepapers = () => {
         );
     }
 
+    // ── Derived badge state ──
+    const badge = appCount !== null ? getBadge(appCount) : null;
+    const nextBadge = appCount !== null ? getNextBadge(appCount) : null;
+    const canPublish = appCount !== null && appCount > 0;
+
     // ── Login guard ──
     if (!user) {
         return (
@@ -216,12 +233,12 @@ export const Whitepapers = () => {
         <div className={styles.page}>
             <div style={{ maxWidth: '860px', margin: '0 auto', padding: '0 var(--space-4)' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--space-8)', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: badge || nextBadge ? 'var(--space-4)' : 'var(--space-8)', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
                     <div>
                         <h1 className={styles.title}>{t('whitepaper.page.title')}</h1>
                         <p className={styles.subtitle}>{t('whitepaper.page.subtitle')}</p>
                     </div>
-                    {!showForm && (
+                    {!showForm && canPublish && (
                         <button
                             onClick={() => setShowForm(true)}
                             style={{
@@ -238,6 +255,82 @@ export const Whitepapers = () => {
                         </button>
                     )}
                 </div>
+
+                {/* ── Badge strip ── */}
+                {(badge || nextBadge) && (
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+                        flexWrap: 'wrap',
+                        padding: 'var(--space-3) var(--space-4)',
+                        borderRadius: 'var(--radius-lg)',
+                        background: badge ? badge.color : 'var(--bg-surface-elevated)',
+                        border: `1px solid ${badge ? badge.borderColor : 'var(--border-subtle)'}`,
+                        marginBottom: 'var(--space-8)',
+                    }}>
+                        {badge ? (
+                            <>
+                                <span style={{ fontSize: '1.4rem' }}>{badge.emoji}</span>
+                                <div>
+                                    <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: badge.textColor }}>
+                                        {badge.emoji} {badge.label}
+                                    </span>
+                                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', marginLeft: 'var(--space-2)' }}>
+                                        — {badge.description}
+                                    </span>
+                                </div>
+                                {nextBadge && (
+                                    <span style={{
+                                        marginLeft: 'auto', fontSize: 'var(--text-xs)',
+                                        color: 'var(--text-tertiary)',
+                                    }}>
+                                        {t('whitepaper.badge.nextAt', { emoji: nextBadge.emoji, label: nextBadge.label, count: nextBadge.minApps })}
+                                    </span>
+                                )}
+                            </>
+                        ) : nextBadge && (
+                            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
+                                {t('whitepaper.badge.earnFirst', { emoji: nextBadge.emoji, label: nextBadge.label })}
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                {/* ── No-app gate — shown instead of publish button ── */}
+                {!canPublish && appCount === 0 && !showForm && (
+                    <div className="glass-panel" style={{
+                        display: 'flex', alignItems: 'center', gap: 'var(--space-4)',
+                        padding: 'var(--space-5) var(--space-6)',
+                        borderRadius: 'var(--radius-xl)',
+                        border: '1px solid rgba(251,191,36,0.35)',
+                        background: 'rgba(251,191,36,0.06)',
+                        marginBottom: 'var(--space-8)',
+                        flexWrap: 'wrap',
+                    }}>
+                        <Rocket size={28} color="#fbbf24" style={{ flexShrink: 0 }} />
+                        <div style={{ flex: 1 }}>
+                            <p style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-primary)', margin: 0 }}>
+                                {t('whitepaper.gate.title')}
+                            </p>
+                            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                                {t('whitepaper.gate.body')}
+                            </p>
+                        </div>
+                        <Link
+                            to="/submit"
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)',
+                                background: 'var(--gradient-neon)', color: '#fff',
+                                padding: 'var(--space-2) var(--space-5)',
+                                borderRadius: 'var(--radius-full)', fontWeight: 700,
+                                fontSize: 'var(--text-sm)', textDecoration: 'none',
+                                boxShadow: 'var(--shadow-glow)', flexShrink: 0,
+                            }}
+                        >
+                            <Plus size={14} />
+                            {t('whitepaper.gate.cta')}
+                        </Link>
+                    </div>
+                )}
 
                 {/* Write form */}
                 {showForm && (

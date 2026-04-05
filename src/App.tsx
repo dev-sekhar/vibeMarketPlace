@@ -6,6 +6,7 @@ import { Submit } from './pages/Submit';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Whitepapers } from './pages/Whitepapers';
+import { Templates } from './pages/Templates';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/app/:slug" element={<AppDetail />} />
           <Route path="/submit" element={<Submit />} />
           <Route path="/whitepapers" element={<Whitepapers />} />
+          <Route path="/templates" element={<Templates />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>
