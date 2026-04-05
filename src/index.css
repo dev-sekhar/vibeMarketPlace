@@ -360,17 +360,43 @@ img.loaded {
   color: var(--text-primary);
 }
 
-.whitepaper-article h1 { font-size: clamp(1.8rem, 3.5vw, 2.4rem); font-weight: 800; }
-.whitepaper-article h2 { font-size: clamp(1.3rem, 2.5vw, 1.65rem); font-weight: 700; }
-.whitepaper-article h3 { font-size: clamp(1.1rem, 2vw, 1.25rem); font-weight: 700; }
+.whitepaper-article h1 {
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+}
 
-.whitepaper-article p  { margin: 0 0 1.25em; }
+.whitepaper-article h2 {
+  font-size: clamp(1.3rem, 2.5vw, 1.65rem);
+  font-weight: 700;
+}
+
+.whitepaper-article h3 {
+  font-size: clamp(1.1rem, 2vw, 1.25rem);
+  font-weight: 700;
+}
+
+.whitepaper-article p {
+  margin: 0 0 1.25em;
+}
+
 .whitepaper-article ul,
-.whitepaper-article ol { padding-left: 1.5em; margin: 0 0 1.25em; }
-.whitepaper-article li { margin-bottom: 0.4em; }
+.whitepaper-article ol {
+  padding-left: 1.5em;
+  margin: 0 0 1.25em;
+}
 
-.whitepaper-article strong { font-weight: 700; }
-.whitepaper-article em    { font-style: italic; color: var(--text-secondary); }
+.whitepaper-article li {
+  margin-bottom: 0.4em;
+}
+
+.whitepaper-article strong {
+  font-weight: 700;
+}
+
+.whitepaper-article em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
 
 .whitepaper-article a {
   color: var(--accent-secondary);
@@ -388,8 +414,8 @@ img.loaded {
 }
 
 .whitepaper-article code {
-  background: rgba(168,85,247,0.1);
-  border: 1px solid rgba(168,85,247,0.2);
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.2);
   border-radius: 4px;
   padding: 2px 6px;
   font-family: 'Fira Code', Consolas, monospace;
