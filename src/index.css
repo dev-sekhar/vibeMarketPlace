@@ -347,3 +347,90 @@ img[loading] {
 img.loaded {
   opacity: 1;
 }
+
+/* ── Whitepaper article reading view ── */
+.whitepaper-article h1,
+.whitepaper-article h2,
+.whitepaper-article h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  margin-top: 1.8em;
+  margin-bottom: 0.5em;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.whitepaper-article h1 { font-size: clamp(1.8rem, 3.5vw, 2.4rem); font-weight: 800; }
+.whitepaper-article h2 { font-size: clamp(1.3rem, 2.5vw, 1.65rem); font-weight: 700; }
+.whitepaper-article h3 { font-size: clamp(1.1rem, 2vw, 1.25rem); font-weight: 700; }
+
+.whitepaper-article p  { margin: 0 0 1.25em; }
+.whitepaper-article ul,
+.whitepaper-article ol { padding-left: 1.5em; margin: 0 0 1.25em; }
+.whitepaper-article li { margin-bottom: 0.4em; }
+
+.whitepaper-article strong { font-weight: 700; }
+.whitepaper-article em    { font-style: italic; color: var(--text-secondary); }
+
+.whitepaper-article a {
+  color: var(--accent-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.whitepaper-article blockquote {
+  border-left: 3px solid var(--accent-secondary);
+  padding-left: 1.1em;
+  margin: 1.5em 0;
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 1.08em;
+}
+
+.whitepaper-article code {
+  background: rgba(168,85,247,0.1);
+  border: 1px solid rgba(168,85,247,0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Fira Code', Consolas, monospace;
+  font-size: 0.875em;
+  color: var(--accent-secondary);
+}
+
+.whitepaper-article pre {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.2em 1.5em;
+  overflow-x: auto;
+  margin: 1.5em 0;
+}
+
+.whitepaper-article pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.875em;
+  color: var(--text-primary);
+}
+
+.whitepaper-article hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 2.5em 0;
+}
+
+.whitepaper-article img {
+  max-width: 100%;
+  border-radius: var(--radius-lg);
+  margin: 1.5em auto;
+  display: block;
+}
+
+.whitepaper-article iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  border-radius: var(--radius-lg);
+  margin: 1.5em 0;
+}
