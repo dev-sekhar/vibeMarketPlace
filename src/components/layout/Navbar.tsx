@@ -1,11 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Globe, Zap, LogIn, LogOut, User } from 'lucide-react';
+import { Globe, Zap, LogIn, LogOut, User, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useVibeAuth } from '../../context/AuthContext';
 
+const formatTimeLeft = (seconds: number): string => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
 export const Navbar = () => {
   const navigate = useNavigate();
-  const { user, signOut, loading } = useVibeAuth();
+  const { user, signOut, loading, sessionTimeLeft, isSessionExpiring } = useVibeAuth();
   const { t, i18n } = useTranslation();
 
   const handleSignOut = async () => {
@@ -74,6 +80,21 @@ export const Navbar = () => {
           {i18n.language.toUpperCase()}
         </button>
 
+        {!loading && user && isSessionExpiring && sessionTimeLeft !== null && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            fontSize: 'var(--text-xs)', fontWeight: 700,
+            color: sessionTimeLeft < 60 ? '#f87171' : '#fbbf24',
+            background: sessionTimeLeft < 60 ? 'rgba(239,68,68,0.12)' : 'rgba(251,191,36,0.12)',
+            border: `1px solid ${sessionTimeLeft < 60 ? 'rgba(239,68,68,0.4)' : 'rgba(251,191,36,0.4)'}`,
+            borderRadius: 'var(--radius-full)',
+            padding: '3px 10px',
+            animation: sessionTimeLeft < 60 ? 'pulse 1s ease-in-out infinite' : undefined,
+          }}>
+            <Clock size={12} />
+            Session expires in {formatTimeLeft(sessionTimeLeft)}
+          </div>
+        )}
         {!loading && (
           user ? (
             /* Logged-in state */

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
@@ -7,6 +7,8 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  sessionTimeLeft: number | null; // seconds remaining in session, null when not logged in
+  isSessionExpiring: boolean;     // true when < 5 minutes left
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<string | null>;
@@ -20,12 +22,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionTimeLeft, setSessionTimeLeft] = useState<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startSessionTimer = (sess: Session | null) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (!sess?.expires_at) { setSessionTimeLeft(null); return; }
+
+    const tick = () => {
+      const remaining = sess.expires_at! - Math.floor(Date.now() / 1000);
+      if (remaining <= 0) {
+        setSessionTimeLeft(0);
+        clearInterval(timerRef.current!);
+        supabase.auth.signOut();
+      } else {
+        setSessionTimeLeft(remaining);
+      }
+    };
+    tick();
+    timerRef.current = setInterval(tick, 1000);
+  };
 
   useEffect(() => {
     // Restore session on mount
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
+      startSessionTimer(data.session);
       setLoading(false);
     });
 
@@ -33,10 +56,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      startSessionTimer(newSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
+
+  const isSessionExpiring = sessionTimeLeft !== null && sessionTimeLeft > 0 && sessionTimeLeft < 300;
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
@@ -71,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signInWithGoogle, signInWithGitHub, signInWithEmail, signUpWithEmail, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, sessionTimeLeft, isSessionExpiring, signInWithGoogle, signInWithGitHub, signInWithEmail, signUpWithEmail, signOut }}>
       {children}
     </AuthContext.Provider>
   );
