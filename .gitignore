@@ -43,6 +43,9 @@ coverage/
 *.tmp
 *.temp
 
+# Temporary repository validation folders
+temp-repo-*
+
 # Antigravity IDE project files (if applicable)
 .antigravity/
 .antigravity-settings.json

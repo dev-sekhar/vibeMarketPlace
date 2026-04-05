@@ -29,6 +29,8 @@ export const Whitepapers = () => {
     const [form, setForm] = useState<FormData>(EMPTY_FORM);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [publishingStage, setPublishingStage] = useState('');
+    const [publishingPercent, setPublishingPercent] = useState(0);
 
     const set = (field: keyof FormData, value: string) =>
         setForm(prev => ({ ...prev, [field]: value }));
@@ -42,6 +44,14 @@ export const Whitepapers = () => {
 
         setLoading(true);
         setError(null);
+        setPublishingStage(t('whitepaper.progress.preparing'));
+        setPublishingPercent(10);
+
+        const progressTimer = window.setInterval(() => {
+            setPublishingPercent(prev => Math.min(prev + 5, 90));
+        }, 250);
+
+        setPublishingStage(t('whitepaper.progress.saving'));
 
         const { error: insertError } = await supabase.from('whitepapers').insert({
             title: form.title,
@@ -53,15 +63,22 @@ export const Whitepapers = () => {
             app_id: form.appId || null,
         });
 
-        setLoading(false);
-
         if (insertError) {
             setError(insertError.message);
+            setPublishingStage('');
+            setPublishingPercent(0);
         } else {
+            setPublishingStage(t('whitepaper.progress.finalizing'));
+            setPublishingPercent(95);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            setPublishingPercent(100);
             setShowForm(false);
             setForm(EMPTY_FORM);
             // Optionally refetch whitepapers
         }
+
+        window.clearInterval(progressTimer);
+        setLoading(false);
     };
 
     // Guard: require login
@@ -203,7 +220,7 @@ export const Whitepapers = () => {
 
                             <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end' }}>
                                 <button
-                                    onClick={() => { setShowForm(false); setForm(EMPTY_FORM); setError(null); }}
+                                    onClick={() => { setShowForm(false); setForm(EMPTY_FORM); setError(null); setPublishingStage(''); setPublishingPercent(0); }}
                                     style={{
                                         padding: 'var(--space-2) var(--space-4)',
                                         borderRadius: 'var(--radius-full)',
@@ -233,6 +250,25 @@ export const Whitepapers = () => {
                                     {loading ? t('whitepaper.button.publishing') : t('whitepaper.button.publish')}
                                 </button>
                             </div>
+
+                            {loading && (
+                                <div style={{ marginTop: 'var(--space-5)' }}>
+                                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-3)' }}>
+                                        {t('whitepaper.progress.note')}
+                                    </p>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-2)' }}>
+                                        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                            {publishingStage}
+                                        </span>
+                                        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+                                            {publishingPercent}%
+                                        </span>
+                                    </div>
+                                    <div style={{ height: '10px', width: '100%', borderRadius: '999px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                                        <div style={{ width: `${publishingPercent}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))', transition: 'width 0.25s ease' }} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

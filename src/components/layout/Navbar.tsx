@@ -42,6 +42,16 @@ export const Navbar = () => {
 
       {/* Right side */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexShrink: 0 }}>
+        <Link to="/whitepapers" id="nav-whitepapers" style={{
+          fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-secondary)',
+          padding: 'var(--space-2) var(--space-3)',
+          borderRadius: 'var(--radius-full)', border: '1px solid var(--border-strong)',
+          background: 'var(--bg-surface-elevated)',
+          display: 'flex', alignItems: 'center', gap: 'var(--space-1)',
+          textDecoration: 'none',
+        }}>
+          {t('nav.whitepapers')}
+        </Link>
         <button
           id="nav-lang"
           onClick={handleLanguageChange}

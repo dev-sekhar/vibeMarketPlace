@@ -24,12 +24,13 @@ export const Hero = ({ onSearch }: HeroProps) => {
       style={{
         position: 'relative',
         textAlign: 'center',
-        padding: 'var(--space-20) var(--space-4) var(--space-16)',
-        overflow: 'hidden',
-        height: '50vh',
+        padding: 'var(--space-8) var(--space-4)',
+        overflow: 'visible',
+        minHeight: '25vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        marginBottom: 'var(--space-12)',
       }}
     >
       {/* Animated background orbs */}
@@ -70,7 +71,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
           border: '1px solid rgba(168, 85, 247, 0.3)',
           borderRadius: 'var(--radius-full)',
           padding: '4px 14px',
-          marginBottom: 'var(--space-6)',
+          marginBottom: 'var(--space-2)',
         }}>
           <Sparkles size={14} color="var(--accent-secondary)" />
           <span style={{
@@ -87,7 +88,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
         <h1 style={{
           fontSize: 'clamp(2.8rem, 7vw, 5rem)',
           lineHeight: 1.08,
-          marginBottom: 'var(--space-5)',
+          marginBottom: 'var(--space-2)',
           fontFamily: 'var(--font-display)',
           letterSpacing: '-0.03em',
         }}>
@@ -99,7 +100,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
           fontSize: 'clamp(1rem, 2.5vw, var(--text-xl))',
           color: 'var(--text-secondary)',
           maxWidth: '580px',
-          margin: '0 auto var(--space-10)',
+          margin: '0 auto var(--space-4)',
           lineHeight: 1.6,
         }}>
           {t('hero.subheadline')}
@@ -110,7 +111,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
           display: 'flex',
           alignItems: 'center',
           maxWidth: '560px',
-          margin: '0 auto var(--space-8)',
+          margin: '0 auto',
           background: 'var(--bg-surface-elevated)',
           border: '1px solid var(--border-strong)',
           borderRadius: 'var(--radius-full)',
@@ -155,7 +156,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
         </div>
 
         {/* CTAs */}
-        <div style={{ display: 'flex', gap: 'var(--space-4)', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-4)', justifyContent: 'center', flexWrap: 'wrap', marginTop: 'var(--space-6)' }}>
           <Link
             to="/submit"
             id="hero-submit-cta"
