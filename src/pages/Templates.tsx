@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, FileText, Search, X, Eye } from 'lucide-react';
-import { TEMPLATES, TEMPLATE_CATEGORIES, type DevTemplate } from '../data/templates';
+import { TEMPLATES, TEMPLATE_CATEGORIES, type DevTemplate } from '../lib/templates';
+import { Button } from '../components/ui/Button';
 
 // ── Colour mapping per category ──────────────────────────────────────────────
 const CATEGORY_COLORS: Record<DevTemplate['category'], string> = {
@@ -91,33 +92,24 @@ function PreviewModal({
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                        <button
+                        <Button
+                            variant="primary"
+                            size="sm"
                             onClick={() => downloadTemplate(template)}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: 'var(--space-1)',
-                                background: color, color: '#fff',
-                                border: 'none', borderRadius: 'var(--radius-md)',
-                                padding: 'var(--space-2) var(--space-4)',
-                                fontWeight: 700, fontSize: 'var(--text-sm)', cursor: 'pointer',
-                            }}
+                            style={{ background: color, boxShadow: `0 0 20px ${color}66` }}
                         >
                             <Download size={14} />
                             Download
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            iconOnly
                             onClick={onClose}
                             aria-label="Close preview"
-                            style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: 'var(--bg-surface-elevated)',
-                                border: '1px solid var(--border-strong)',
-                                borderRadius: 'var(--radius-md)',
-                                padding: 'var(--space-2)',
-                                cursor: 'pointer', color: 'var(--text-secondary)',
-                            }}
                         >
                             <X size={16} />
-                        </button>
+                        </Button>
                     </div>
                 </div>
                 {/* Code content */}
@@ -210,38 +202,24 @@ function TemplateCard({
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                <button
+                <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => downloadTemplate(template)}
-                    style={{
-                        flex: 1,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)',
-                        background: color, color: '#fff',
-                        border: 'none', borderRadius: 'var(--radius-md)',
-                        padding: 'var(--space-2) var(--space-3)',
-                        fontWeight: 700, fontSize: 'var(--text-sm)', cursor: 'pointer',
-                        transition: 'opacity var(--transition-fast)',
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
+                    style={{ background: color, flex: 1, boxShadow: `0 0 20px ${color}66` }}
                 >
                     <Download size={14} />
                     Download
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => onPreview(template)}
-                    style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-1)',
-                        background: 'var(--bg-surface-elevated)',
-                        border: '1px solid var(--border-strong)',
-                        color: 'var(--text-secondary)',
-                        borderRadius: 'var(--radius-md)',
-                        padding: 'var(--space-2) var(--space-3)',
-                        fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer',
-                    }}
+                    style={{ background: color, color: '#fff', boxShadow: 'none' }}
                 >
                     <Eye size={14} />
                     Preview
-                </button>
+                </Button>
             </div>
         </div>
     );

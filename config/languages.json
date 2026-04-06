@@ -1,0 +1,20 @@
+[
+    {
+        "code": "en",
+        "label": "English",
+        "flag": "🇬🇧",
+        "enabled": true
+    },
+    {
+        "code": "es",
+        "label": "Español",
+        "flag": "🇪🇸",
+        "enabled": true
+    },
+    {
+        "code": "zh",
+        "label": "中文",
+        "flag": "🇨🇳",
+        "enabled": true
+    }
+]
