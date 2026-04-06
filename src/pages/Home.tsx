@@ -1,10 +1,16 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { BookOpen } from 'lucide-react';
 import { Hero } from '../components/Hero/Hero';
 import { StatsBar } from '../components/StatsBar/StatsBar';
 import { AppCard } from '../components/AppCard/AppCard';
+import { PaperCard } from '../components/PaperCard/PaperCard';
 import { supabase } from '../lib/supabaseClient';
 import { useTranslation } from 'react-i18next';
+import { HOME_APPS_LIMIT, HOME_WHITEPAPERS_LIMIT } from '../config/home';
 import type { VibeApp, AppCategory } from '../types/app';
+
+type LatestPaper = { id: string; title: string; description: string; external_url: string; source: string; author_name: string; created_at: string };
 
 const ALL_CATEGORIES: { key: AppCategory; translationKey: string }[] = [
   { key: 'Web App', translationKey: 'category.webApp' },
@@ -20,11 +26,13 @@ export const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<AppCategory | null>(null);
   const [apps, setApps] = useState<VibeApp[]>([]);
+  const [latestPapers, setLatestPapers] = useState<LatestPaper[]>([]);
+  const [totalPaperCount, setTotalPaperCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
-    console.log('[Home] useEffect running - fetching apps...');
     const fetchApps = async () => {
       try {
         const { data, error } = await supabase
@@ -32,16 +40,10 @@ export const Home = () => {
           .select('*')
           .order('created_at', { ascending: false });
 
-        console.log('[Home] fetched apps:', data?.length, 'apps');
-        data?.forEach(app => {
-          console.log(`App: ${app.name} - Thumbnail: ${app.thumbnail_url || 'NO THUMBNAIL'}`);
-        });
-
         if (error) {
           console.error('Error fetching apps:', error);
           setApps([]);
         } else if (data) {
-          // Transform Supabase data to VibeApp format
           const transformedApps: VibeApp[] = data.map(app => ({
             id: app.id,
             name: app.name,
@@ -69,12 +71,27 @@ export const Home = () => {
         console.error('[Home] Error in fetchApps:', error);
         setApps([]);
       } finally {
-        console.log('[Home] fetchApps completed');
         setLoading(false);
       }
     };
 
+    const fetchPapers = async () => {
+      const [{ data }, { count }] = await Promise.all([
+        supabase
+          .from('whitepapers')
+          .select('id, title, description, external_url, source, author_name, created_at')
+          .order('created_at', { ascending: false })
+          .limit(HOME_WHITEPAPERS_LIMIT),
+        supabase
+          .from('whitepapers')
+          .select('id', { count: 'exact', head: true }),
+      ]);
+      setLatestPapers(data ?? []);
+      setTotalPaperCount(count ?? 0);
+    };
+
     fetchApps();
+    fetchPapers();
   }, []);
 
   const filtered = useMemo(() => {
@@ -92,6 +109,11 @@ export const Home = () => {
   }, [searchQuery, activeCategory, apps]);
 
   const featuredApps = useMemo(() => apps.filter(a => a.featured), [apps]);
+
+  const isFiltering = !!searchQuery || !!activeCategory;
+  // When not searching/filtering, cap display to HOME_APPS_LIMIT. When filtering, show all matches.
+  const displayedApps = isFiltering || showAll ? filtered : filtered.slice(0, HOME_APPS_LIMIT);
+  const hasMore = !isFiltering && !showAll && filtered.length > HOME_APPS_LIMIT;
 
   const handleUpvote = async (appId: string, delta: number) => {
     setApps(prev => prev.map(app => app.id === appId ? { ...app, upvotes: app.upvotes + delta } : app));
@@ -117,6 +139,9 @@ export const Home = () => {
       {/* ── Hero ── */}
       <Hero onSearch={setSearchQuery} />
 
+      {/* ── Floating Stats Bar (position:fixed, draggable) ── */}
+      <StatsBar apps={apps} paperCount={totalPaperCount} />
+
       {/* ── Platform Section ── */}
       <section
         style={{
@@ -138,7 +163,7 @@ export const Home = () => {
           <p style={{
             fontSize: 'var(--text-lg)',
             color: 'var(--text-secondary)',
-            maxWidth: '600px',
+            maxWidth: '900px',
             margin: '0 auto',
             lineHeight: 1.6,
           }}>
@@ -147,10 +172,75 @@ export const Home = () => {
         </div>
       </section>
 
-      <div className="container">
-        {/* ── Stats Bar ── */}
-        <StatsBar apps={apps} />
+      {/* ── Latest Research — full-width strip ── */}
+      {latestPapers.length > 0 && (
+        <section style={{
+          width: '100%',
+          background: 'linear-gradient(100deg, rgba(20,8,50,0.85) 0%, rgba(50,10,90,0.75) 45%, rgba(80,15,60,0.75) 100%)',
+          borderTop: '1px solid rgba(168,85,247,0.15)',
+          borderBottom: '1px solid rgba(168,85,247,0.15)',
+          padding: 'var(--space-6) 0',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}>
+          <div className="container">
+            {/* Strip header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-3)',
+              marginBottom: 'var(--space-4)',
+            }}>
+              <BookOpen size={16} style={{ color: 'rgba(180,130,255,0.75)', flexShrink: 0 }} />
+              <span style={{
+                color: 'rgba(200,175,255,0.85)',
+                fontWeight: 700,
+                fontSize: 'var(--text-sm)',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+              }}>
+                {t('home.latestResearch')}
+              </span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,120,220,0.28)' }} />
+              <Link
+                to="/whitepapers"
+                style={{
+                  color: 'rgba(168,130,255,0.80)',
+                  fontWeight: 600,
+                  fontSize: 'var(--text-sm)',
+                  textDecoration: 'none',
+                  flexShrink: 0,
+                }}
+              >
+                {t('home.viewAllPapers')} →
+              </Link>
+            </div>
 
+            {/* Papers grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: 'var(--space-4)',
+            }}>
+              {latestPapers.map(paper => (
+                <PaperCard
+                  key={paper.id}
+                  id={paper.id}
+                  title={paper.title}
+                  description={paper.description ?? ''}
+                  external_url={paper.external_url ?? ''}
+                  source={paper.source ?? ''}
+                  author_name={paper.author_name}
+                  created_at={paper.created_at}
+                  onClick={() => window.open(paper.external_url, '_blank', 'noopener,noreferrer')}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <div className="container" style={{ marginTop: 'var(--space-10)' }}>
         {/* ── Featured Spotlight ── */}
         {!searchQuery && !activeCategory && !loading && featuredApps.length > 0 && (
           <section aria-label="Featured apps" style={{ marginBottom: 'var(--space-12)' }}>
@@ -184,6 +274,7 @@ export const Home = () => {
             display: 'flex',
             flexWrap: 'wrap',
             gap: 'var(--space-2)',
+            marginTop: 'var(--space-8)',
             marginBottom: 'var(--space-6)',
           }}
         >
@@ -219,7 +310,9 @@ export const Home = () => {
                 : t('home.allApps')}
           </h2>
           <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>
-            {filtered.length} {filtered.length === 1 ? t('home.app') : t('home.apps')}
+            {isFiltering
+              ? `${filtered.length} ${filtered.length === 1 ? t('home.app') : t('home.apps')}`
+              : t('home.showingLatest', { limit: Math.min(HOME_APPS_LIMIT, filtered.length), total: apps.length })}
           </span>
         </div>
 
@@ -227,16 +320,11 @@ export const Home = () => {
         <section
           id="app-grid"
           aria-label="App listings"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: 'var(--space-6)',
-            paddingBottom: 'var(--space-16)',
-          }}
+          className="app-grid-home"
         >
           {loading ? (
             // Loading skeleton
-            Array.from({ length: 6 }).map((_, i) => (
+            Array.from({ length: HOME_APPS_LIMIT }).map((_, i) => (
               <div key={i} style={{
                 background: 'var(--bg-surface)',
                 border: '1px solid var(--border-subtle)',
@@ -278,8 +366,8 @@ export const Home = () => {
                 </div>
               </div>
             ))
-          ) : filtered.length > 0 ? (
-            filtered.map(app => <AppCard key={app.id} app={app} onUpvote={handleUpvote} />)
+          ) : displayedApps.length > 0 ? (
+            displayedApps.map(app => <AppCard key={app.id} app={app} onUpvote={handleUpvote} />)
           ) : (
             <div style={{
               gridColumn: '1/-1',
@@ -295,6 +383,28 @@ export const Home = () => {
             </div>
           )}
         </section>
+
+        {/* ── View all apps link ── */}
+        {hasMore && (
+          <div style={{ textAlign: 'center', paddingBottom: 'var(--space-16)' }}>
+            <button
+              onClick={() => setShowAll(true)}
+              style={{
+                background: 'none',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-full)',
+                color: 'var(--accent-secondary)',
+                fontWeight: 700,
+                fontSize: 'var(--text-sm)',
+                padding: 'var(--space-3) var(--space-6)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+              }}
+            >
+              {t('home.viewAllApps', { count: apps.length })}
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

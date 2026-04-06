@@ -106,12 +106,23 @@ export const AppCard = ({ app, onUpvote }: AppCardProps) => {
           <p className={styles.description}>{app.shortDescription}</p>
 
           {/* Tags */}
-          <div className={styles.tags}>
-            <Tag size={12} color="var(--text-tertiary)" />
-            {app.tags.slice(0, 3).map(tag => (
-              <span key={tag} className={styles.tag}>{tag}</span>
-            ))}
-          </div>
+          {app.tags.length > 0 && (
+            <div className={styles.tags}>
+              <Tag size={12} color="var(--text-tertiary)" />
+              {app.tags.slice(0, 3).map(tag => (
+                <span key={tag} className={styles.tag}>{tag}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Tech stack badges */}
+          {app.techStack.length > 0 && (
+            <div className={styles.techBadges}>
+              {app.techStack.slice(0, 4).map(tech => (
+                <span key={tech} className={styles.techBadge}>{tech}</span>
+              ))}
+            </div>
+          )}
 
           {/* Author */}
           <div className={styles.author}>

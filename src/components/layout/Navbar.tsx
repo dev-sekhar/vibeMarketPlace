@@ -68,8 +68,10 @@ export const Navbar = () => {
           padding: 'var(--space-2) var(--space-3)',
           borderRadius: 'var(--radius-full)', border: '1px solid var(--border-strong)',
           background: 'var(--bg-surface-elevated)',
-          display: 'flex', alignItems: 'center', gap: 'var(--space-1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-1)',
           textDecoration: 'none',
+          minWidth: '196px',
+          boxSizing: 'border-box',
         }}>
           {t('nav.whitepapers')}
         </Link>
@@ -78,8 +80,10 @@ export const Navbar = () => {
           padding: 'var(--space-2) var(--space-3)',
           borderRadius: 'var(--radius-full)', border: '1px solid var(--border-strong)',
           background: 'var(--bg-surface-elevated)',
-          display: 'flex', alignItems: 'center', gap: 'var(--space-1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-1)',
           textDecoration: 'none',
+          minWidth: '132px',
+          boxSizing: 'border-box',
         }}>
           {t('nav.templates')}
         </Link>
@@ -158,12 +162,14 @@ export const Navbar = () => {
                 id="nav-signout"
                 onClick={handleSignOut}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 'var(--space-1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-1)',
                   fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-secondary)',
                   padding: 'var(--space-2) var(--space-3)',
                   borderRadius: 'var(--radius-full)', border: '1px solid var(--border-strong)',
                   background: 'var(--bg-surface-elevated)', cursor: 'pointer',
                   transition: 'all var(--transition-fast)',
+                  minWidth: '116px',
+                  boxSizing: 'border-box',
                 }}
               >
                 <LogOut size={14} />{t('nav.signOut')}
@@ -176,7 +182,9 @@ export const Navbar = () => {
               padding: 'var(--space-2) var(--space-3)',
               borderRadius: 'var(--radius-full)', border: '1px solid var(--border-strong)',
               background: 'var(--bg-surface-elevated)',
-              display: 'flex', alignItems: 'center', gap: 'var(--space-1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-1)',
+              minWidth: '88px',
+              boxSizing: 'border-box',
             }}>
               <LogIn size={14} />{t('nav.login')}
             </Link>

@@ -212,6 +212,30 @@
   border-color: var(--border-strong);
 }
 
+/* ---- Tech stack badges ---- */
+.techBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.techBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-secondary);
+  background: rgba(59, 130, 246, 0.10);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.card:hover .techBadge {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.40);
+}
+
 /* ---- Author row ---- */
 .author {
   display: flex;

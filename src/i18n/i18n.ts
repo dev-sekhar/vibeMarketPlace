@@ -29,11 +29,12 @@ const resources = {
 
             // Platform section
             "platform.title": "Built by the community, powered by vibes.",
-            "platform.description": "VibeMarket is a first of its kind community-led open market place for open souruce vibe coded applications. Builders can uplaod their code base for the community to take it further or use it as is.",
+            "platform.description": "VibeMarket is the first community‑led marketplace for vibe‑coded applications. Built on open source and designed for collaboration, it lets builders upload their app's codebase and share it with the world. The community can extend, remix, or use the apps right away. It is also a platform to showcase the abilities of non‑developers — proving that anyone can create real‑world tools and applications. Every project is a chance to innovate. Every contribution helps ideas grow. VibeMarket is where creativity meets community, and where open code becomes shared progress.",
             "stats.appsListed": "Apps Listed",
             "stats.creators": "Creators",
             "stats.totalUpvotes": "Total Upvotes",
             "stats.categories": "Categories",
+            "stats.papers": "Papers & Articles",
 
             // App Card
             "appCard.liveDemo": "Live Demo",
@@ -106,6 +107,10 @@ const resources = {
             "home.allApps": "All Apps",
             "home.app": "app",
             "home.apps": "apps",
+            "home.latestResearch": "Latest Research",
+            "home.viewAllPapers": "View all →",
+            "home.viewAllApps": "View all {{count}} apps",
+            "home.showingLatest": "Showing latest {{limit}} of {{total}}",
 
             // Categories
             "category.webApp": "Web App",
@@ -124,7 +129,7 @@ const resources = {
 
             // Whitepapers
             "whitepaper.page.title": "Research & Whitepapers",
-            "whitepaper.page.subtitle": "Share your knowledge about vibe coding, AI-powered development, and building with agents.",
+            "whitepaper.page.subtitle": "Found a great article about vibe coding or AI development? Submit the link and share it with the community.",
             "whitepaper.form.title": "Publish a New Whitepaper",
             "whitepaper.field.title": "Whitepaper Title",
             "whitepaper.field.description": "Short Description",
@@ -167,6 +172,38 @@ const resources = {
             "templates.category.contributing": "CONTRIBUTING",
             "templates.category.env": ".env Example",
             "templates.category.structure": "Repo Structure",
+
+            // Login
+            "login.title": "Welcome back",
+            "login.subtitle": "Sign in to your account to continue",
+            "login.orEmail": "or continue with email",
+            "login.email": "Email",
+            "login.password": "Password",
+            "login.forgotPassword": "Forgot password?",
+            "login.signIn": "Sign In",
+            "login.createAccount": "Create account",
+            "login.noAccount": "Don't have an account?",
+            "login.placeholder.email": "you@example.com",
+            "login.placeholder.password": "••••••••",
+            "login.showPassword": "Show password",
+            "login.hidePassword": "Hide password",
+
+            // Register
+            "register.title": "Join the community",
+            "register.subtitle": "Create your account and start submitting tools",
+            "register.orEmail": "or sign up with email",
+            "register.displayName": "Display Name",
+            "register.email": "Email",
+            "register.password": "Password",
+            "register.createAccount": "Create Account",
+            "register.hasAccount": "Already have an account?",
+            "register.signIn": "Sign in",
+            "register.placeholder.name": "Your name or handle",
+            "register.placeholder.email": "you@example.com",
+            "register.placeholder.password": "Min. 8 characters",
+            "register.terms": "By signing up you agree to our Terms of Service and Privacy Policy.",
+            "register.checkInbox": "Check your inbox!",
+            "register.confirmationMessage": "We've sent a confirmation link to {{email}}. Confirm your email then sign in.",
         }
     },
     es: {
@@ -195,11 +232,12 @@ const resources = {
 
             // Platform section
             "platform.title": "Construido por la comunidad, potenciado por vibes.",
-            "platform.description": "VibeMarket es el primer mercado abierto comunitario para aplicaciones de código abierto programadas al vibe. Los constructores pueden cargar su base de código para que la comunidad la lleve más lejos o la use tal como está.",
+            "platform.description": "VibeMarket es el primer mercado liderado por la comunidad para aplicaciones codificadas al vibe. Construido sobre código abierto y diseñado para la colaboración, permite a los creadores subir el código de su app y compartirlo con el mundo. La comunidad puede extenderlo, remezclarlo o usarlo de inmediato. También es una plataforma para demostrar las capacidades de quienes no son desarrolladores, probando que cualquiera puede crear herramientas y aplicaciones reales. Cada proyecto es una oportunidad para innovar. Cada contribución ayuda a que las ideas crezcan. VibeMarket es donde la creatividad se encuentra con la comunidad, y donde el código abierto se convierte en progreso compartido.",
             "stats.appsListed": "Apps Listadas",
             "stats.creators": "Creadores",
             "stats.totalUpvotes": "Votos Totales",
             "stats.categories": "Categorías",
+            "stats.papers": "Artículos & Papers",
 
             // App Card
             "appCard.liveDemo": "Demo en Vivo",
@@ -328,7 +366,7 @@ const resources = {
 
             // Whitepapers
             "whitepaper.page.title": "Investigación & Documentos",
-            "whitepaper.page.subtitle": "Comparte tu conocimiento sobre codificación vibe, desarrollo impulsado por IA, y construcción con agentes.",
+            "whitepaper.page.subtitle": "¿Encontraste un gran artículo sobre vibe coding o desarrollo con IA? Envía el enlace y compártelo con la comunidad.",
             "whitepaper.form.title": "Publicar un Nuevo Documento",
             "whitepaper.field.title": "Título del Documento",
             "whitepaper.field.description": "Descripción Breve",
@@ -399,11 +437,12 @@ const resources = {
 
             // Platform section
             "platform.title": "由社区构建，由 vibes 驱动。",
-            "platform.description": "VibeMarket 是首个社区领导的开源 vibe 编码应用开放市场。构建者可以上传他们的代码库供社区进一步开发或直接使用。",
+            "platform.description": "VibeMarket 是首个由社区主导的 vibe 编程应用市场。它基于开源构建，专为协作而设计，让创作者能够上传应用代码库并与全世界分享。社区可以随时扩展、二次创作或直接使用这些应用。它也是一个展示非开发者能力的平台——证明任何人都能创造真实的工具和应用。每个项目都是创新的机会，每一份贡献都让创意得以生长。VibeMarket 是创意与社区交汇之处，是开放代码成为共同进步的地方。",
             "stats.appsListed": "已列出应用",
             "stats.creators": "创作者",
             "stats.totalUpvotes": "总投票数",
             "stats.categories": "类别",
+            "stats.papers": "论文与文章",
 
             // App Card
             "appCard.liveDemo": "在线演示",
@@ -532,7 +571,7 @@ const resources = {
 
             // Whitepapers
             "whitepaper.page.title": "研究 & 白皮书",
-            "whitepaper.page.subtitle": "分享你关于振动编码、人工智能驱动开发和代理构建的知识。",
+            "whitepaper.page.subtitle": "发现了关于 vibe coding 或 AI 开发的好文章？提交链接，与社区共享。",
             "whitepaper.form.title": "发布新白皮书",
             "whitepaper.field.title": "白皮书标题",
             "whitepaper.field.description": "简短描述",

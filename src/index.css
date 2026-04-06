@@ -460,3 +460,67 @@ img.loaded {
   border-radius: var(--radius-lg);
   margin: 1.5em 0;
 }
+
+/* ── Home page: stats + latest papers side-by-side ── */
+.stats-papers-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-bottom: var(--space-12);
+}
+
+@media (min-width: 900px) {
+  .stats-papers-row {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .stats-papers-stats {
+    flex: 3 3 0;
+  }
+
+  .stats-papers-papers {
+    flex: 2 2 0;
+  }
+}
+
+/* ── Home page app grid: 5-column on desktop, responsive ── */
+.app-grid-home {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(2, 1fr);
+  padding-bottom: var(--space-16);
+}
+
+@media (min-width: 640px) {
+  .app-grid-home {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+}
+
+@media (min-width: 1100px) {
+  .app-grid-home {
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+/* ── Whitepapers grid: mirrors app grid ── */
+.papers-grid {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 640px) {
+  .papers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .papers-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS public.apps (
   author_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   author_name       TEXT NOT NULL DEFAULT 'Anonymous',
   upvotes           INTEGER NOT NULL DEFAULT 0,
-  featured          BOOLEAN NOT NULL DEFAULT FALSE
+  featured          BOOLEAN NOT NULL DEFAULT FALSE,
+  community_links   JSONB DEFAULT NULL
 );
 
 ALTER TABLE public.apps ENABLE ROW LEVEL SECURITY;
@@ -64,39 +65,43 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('thumbnails', 'thumbnails
 CREATE POLICY "Public thumbnail access" ON storage.objects FOR SELECT USING (bucket_id = 'thumbnails');
 CREATE POLICY "Authenticated users can upload thumbnails" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'thumbnails' AND auth.role() = 'authenticated');
 
--- 5. Whitepapers table
+-- 5. Whitepapers table (links to externally published articles)
 CREATE TABLE IF NOT EXISTS public.whitepapers (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   title        TEXT NOT NULL,
   description  TEXT NOT NULL DEFAULT '',
-  content      TEXT NOT NULL,
-  content_type TEXT NOT NULL DEFAULT 'html',
+  external_url TEXT NOT NULL,
+  source       TEXT NOT NULL DEFAULT 'Other',
   author_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  author_name  TEXT NOT NULL DEFAULT 'Anonymous',
-  app_id       UUID REFERENCES public.apps(id) ON DELETE SET NULL
+  author_name  TEXT NOT NULL DEFAULT 'Anonymous'
 );
 
 ALTER TABLE public.whitepapers ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Whitepapers are publicly readable"        ON public.whitepapers FOR SELECT USING (TRUE);
 CREATE POLICY "Authenticated users can insert whitepapers" ON public.whitepapers FOR INSERT WITH CHECK (auth.uid() = author_id);
-CREATE POLICY "Authors can update their own whitepapers"  ON public.whitepapers FOR UPDATE USING (auth.uid() = author_id);
 CREATE POLICY "Authors can delete their own whitepapers"  ON public.whitepapers FOR DELETE USING (auth.uid() = author_id);
 
--- Auto-update updated_at on edit
-CREATE OR REPLACE FUNCTION update_whitepapers_updated_at()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$;
+-- ============================================================
+-- MIGRATION: whitepapers — switch from content to external_url
+-- Run this in Supabase Dashboard → SQL Editor if the table
+-- already exists with the old schema.
+-- ============================================================
+ALTER TABLE public.whitepapers
+  ADD COLUMN IF NOT EXISTS external_url TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS source       TEXT NOT NULL DEFAULT 'Other';
 
-CREATE TRIGGER on_whitepaper_update
-BEFORE UPDATE ON public.whitepapers
-FOR EACH ROW EXECUTE FUNCTION update_whitepapers_updated_at();
+ALTER TABLE public.whitepapers
+  DROP COLUMN IF EXISTS content,
+  DROP COLUMN IF EXISTS content_type,
+  DROP COLUMN IF EXISTS updated_at,
+  DROP COLUMN IF EXISTS app_id;
+
+-- Remove the default after migration (new rows must supply a real URL)
+ALTER TABLE public.whitepapers
+  ALTER COLUMN external_url DROP DEFAULT;
+-- ============================================================
 
 -- 5. Geo metadata is stored in auth.users.raw_user_meta_data (Supabase user_metadata).
 -- The following fields are set during registration when the user grants location permission:
