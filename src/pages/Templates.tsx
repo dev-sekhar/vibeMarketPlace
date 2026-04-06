@@ -23,6 +23,15 @@ const CATEGORY_ICONS: Record<DevTemplate['category'], string> = {
     structure: '🗂️',
 };
 
+const CATEGORY_GRADIENTS: Record<DevTemplate['category'], string> = {
+    readme: 'linear-gradient(135deg, #38bdf8, #818cf8)',
+    gitignore: 'linear-gradient(135deg, #a78bfa, #c084fc)',
+    license: 'linear-gradient(135deg, #fb923c, #f43f5e)',
+    contributing: 'linear-gradient(135deg, #34d399, #38bdf8)',
+    env: 'linear-gradient(135deg, #fbbf24, #fb923c)',
+    structure: 'linear-gradient(135deg, #f472b6, #a78bfa)',
+};
+
 // ── Download helper ───────────────────────────────────────────────────────────
 function downloadTemplate(template: DevTemplate) {
     const blob = new Blob([template.content], { type: 'text/plain;charset=utf-8' });
@@ -96,7 +105,7 @@ function PreviewModal({
                             variant="primary"
                             size="sm"
                             onClick={() => downloadTemplate(template)}
-                            style={{ background: color, boxShadow: `0 0 20px ${color}66` }}
+                            style={{ background: CATEGORY_GRADIENTS[template.category], boxShadow: `0 0 20px ${color}66` }}
                         >
                             <Download size={14} />
                             Download
@@ -202,24 +211,19 @@ function TemplateCard({
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => downloadTemplate(template)}
-                    style={{ background: color, flex: 1, boxShadow: `0 0 20px ${color}66` }}
-                >
-                    <Download size={14} />
-                    Download
-                </Button>
-                <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => onPreview(template)}
-                    style={{ background: color, color: '#fff', boxShadow: 'none' }}
-                >
-                    <Eye size={14} />
-                    Preview
-                </Button>
+                {([{ icon: <Download size={14} />, label: 'Download', action: () => downloadTemplate(template) },
+                { icon: <Eye size={14} />, label: 'Preview', action: () => onPreview(template) }] as const).map(({ icon, label, action }) => (
+                    <Button
+                        key={label}
+                        variant="primary"
+                        size="sm"
+                        onClick={action}
+                        style={{ flex: 1, background: CATEGORY_GRADIENTS[template.category], boxShadow: `0 0 20px ${color}66` }}
+                    >
+                        {icon}
+                        {label}
+                    </Button>
+                ))}
             </div>
         </div>
     );
