@@ -12,6 +12,8 @@ const formatTimeLeft = (seconds: number): string => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
+const fmtCount = (n: number): string => n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+
 export const Navbar = () => {
   const navigate = useNavigate();
   const { user, signOut, loading, sessionTimeLeft, isSessionExpiring } = useVibeAuth();
@@ -26,6 +28,35 @@ export const Navbar = () => {
       .eq('author_id', user.id)
       .then(({ count }) => setAppCount(count ?? 0));
   }, [user?.id]);
+
+  const [globalStats, setGlobalStats] = useState({ apps: 0, creators: 0, upvotes: 0, categories: 0, papers: 0 });
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from('apps').select('author_name, upvotes, category'),
+      supabase.from('whitepapers').select('id', { count: 'exact', head: true }),
+    ]).then(([{ data }, { count }]) => {
+      if (data) {
+        setGlobalStats({
+          apps: data.length,
+          creators: new Set(data.map((a: { author_name: string }) => a.author_name)).size,
+          upvotes: data.reduce((s: number, a: { upvotes: number }) => s + (a.upvotes ?? 0), 0),
+          categories: new Set(data.map((a: { category: string }) => a.category)).size,
+          papers: count ?? 0,
+        });
+      }
+    });
+  }, []);
+
+  // Keep upvote total in sync when Home.tsx persists an upvote
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { delta } = (e as CustomEvent<{ delta: number }>).detail;
+      setGlobalStats(prev => ({ ...prev, upvotes: prev.upvotes + delta }));
+    };
+    window.addEventListener('openvibes:upvote', handler);
+    return () => window.removeEventListener('openvibes:upvote', handler);
+  }, []);
 
   const badge = getBadge(appCount);
 
@@ -55,11 +86,24 @@ export const Navbar = () => {
         borderBottom: '1px solid var(--border-subtle)',
       }}
     >
-      {/* Brand */}
-      <Link to="/" id="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
-        <Zap color="var(--accent-secondary)" fill="var(--accent-secondary)" size={22} />
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)' }}>{t('nav.brand')}</span>
-      </Link>
+      {/* Left: Brand + inline stats */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-5)', flexShrink: 0 }}>
+        <Link to="/" id="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
+          <Zap color="var(--accent-secondary)" fill="var(--accent-secondary)" size={22} />
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--text-lg)' }}>{t('nav.brand')}</span>
+        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', flexShrink: 0 }}>
+          <span><strong>{globalStats.apps}</strong>&thinsp;{t('stats.appsListed')}</span>
+          <span style={{ opacity: 0.35 }}>·</span>
+          <span><strong>{globalStats.papers}</strong>&thinsp;{t('stats.papers')}</span>
+          <span style={{ opacity: 0.35 }}>·</span>
+          <span><strong>{globalStats.creators}</strong>&thinsp;{t('stats.creators')}</span>
+          <span style={{ opacity: 0.35 }}>·</span>
+          <span><strong>{fmtCount(globalStats.upvotes)}</strong>&thinsp;{t('stats.totalUpvotes')}</span>
+          <span style={{ opacity: 0.35 }}>·</span>
+          <span><strong>{globalStats.categories}</strong>&thinsp;{t('stats.categories')}</span>
+        </div>
+      </div>
 
       {/* Right side */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexShrink: 0 }}>
@@ -129,14 +173,20 @@ export const Navbar = () => {
             /* Logged-in state */
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                <div style={{
-                  width: '32px', height: '32px', borderRadius: '50%',
-                  background: 'var(--gradient-neon)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: 'var(--shadow-glow)',
-                }}>
+                <Link
+                  to="/profile"
+                  id="nav-profile"
+                  title={t('nav.profile')}
+                  style={{
+                    width: '32px', height: '32px', borderRadius: '50%',
+                    background: 'var(--gradient-neon)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: 'var(--shadow-glow)',
+                    flexShrink: 0,
+                  }}
+                >
                   <User size={16} color="#fff" />
-                </div>
+                </Link>
                 <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {user.user_metadata?.full_name ?? user.email?.split('@')[0]}
                 </span>

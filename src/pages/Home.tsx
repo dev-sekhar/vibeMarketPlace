@@ -2,10 +2,10 @@ import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { Hero } from '../components/Hero/Hero';
-import { StatsBar } from '../components/StatsBar/StatsBar';
 import { AppCard } from '../components/AppCard/AppCard';
 import { PaperCard } from '../components/PaperCard/PaperCard';
 import { supabase } from '../lib/supabaseClient';
+import { useVibeAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { HOME_APPS_LIMIT, HOME_WHITEPAPERS_LIMIT } from '../config/home';
 import type { VibeApp, AppCategory } from '../types/app';
@@ -27,10 +27,12 @@ export const Home = () => {
   const [activeCategory, setActiveCategory] = useState<AppCategory | null>(null);
   const [apps, setApps] = useState<VibeApp[]>([]);
   const [latestPapers, setLatestPapers] = useState<LatestPaper[]>([]);
-  const [totalPaperCount, setTotalPaperCount] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [userUpvotes, setUserUpvotes] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
+  const { user } = useVibeAuth();
 
   useEffect(() => {
     const fetchApps = async () => {
@@ -76,23 +78,27 @@ export const Home = () => {
     };
 
     const fetchPapers = async () => {
-      const [{ data }, { count }] = await Promise.all([
-        supabase
-          .from('whitepapers')
-          .select('id, title, description, external_url, source, author_name, created_at')
-          .order('created_at', { ascending: false })
-          .limit(HOME_WHITEPAPERS_LIMIT),
-        supabase
-          .from('whitepapers')
-          .select('id', { count: 'exact', head: true }),
-      ]);
+      const { data } = await supabase
+        .from('whitepapers')
+        .select('id, title, description, external_url, source, author_name, created_at')
+        .order('created_at', { ascending: false })
+        .limit(HOME_WHITEPAPERS_LIMIT);
       setLatestPapers(data ?? []);
-      setTotalPaperCount(count ?? 0);
     };
 
     fetchApps();
     fetchPapers();
   }, []);
+
+  // Fetch which apps the current user has already upvoted
+  useEffect(() => {
+    if (!user) { setUserUpvotes(new Set()); return; }
+    supabase
+      .from('upvotes')
+      .select('app_id')
+      .eq('user_id', user.id)
+      .then(({ data }) => setUserUpvotes(new Set((data ?? []).map((r: { app_id: string }) => r.app_id))));
+  }, [user?.id]);
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -116,21 +122,38 @@ export const Home = () => {
   const hasMore = !isFiltering && !showAll && filtered.length > HOME_APPS_LIMIT;
 
   const handleUpvote = async (appId: string, delta: number) => {
-    setApps(prev => prev.map(app => app.id === appId ? { ...app, upvotes: app.upvotes + delta } : app));
-
+    if (!user) return; // Must be authenticated to upvote
     const app = apps.find(a => a.id === appId);
     if (!app) return;
+    const newUpvotes = app.upvotes + delta;
+
+    // Optimistic UI update
+    setApps(prev => prev.map(a => a.id === appId ? { ...a, upvotes: newUpvotes } : a));
+    setUserUpvotes(prev => {
+      const next = new Set(prev);
+      if (delta > 0) next.add(appId); else next.delete(appId);
+      return next;
+    });
 
     try {
-      const { error } = await supabase
-        .from('apps')
-        .update({ upvotes: app.upvotes + delta })
-        .eq('id', appId);
-      if (error) {
-        console.error('Supabase upvote update failed:', error);
+      let error;
+      if (delta > 0) {
+        // INSERT into upvotes table — trigger auto-syncs apps.upvotes
+        ({ error } = await supabase.from('upvotes').insert({ app_id: appId, user_id: user.id }));
+      } else {
+        ({ error } = await supabase.from('upvotes').delete().eq('app_id', appId).eq('user_id', user.id));
       }
+      if (error) throw error;
+      window.dispatchEvent(new CustomEvent('openvibes:upvote', { detail: { delta } }));
     } catch (err) {
-      console.error('Supabase upvote update exception:', err);
+      console.error('Upvote error:', err);
+      // Revert optimistic updates
+      setApps(prev => prev.map(a => a.id === appId ? { ...a, upvotes: app.upvotes } : a));
+      setUserUpvotes(prev => {
+        const next = new Set(prev);
+        if (delta > 0) next.delete(appId); else next.add(appId);
+        return next;
+      });
     }
   };
 
@@ -138,9 +161,6 @@ export const Home = () => {
     <>
       {/* ── Hero ── */}
       <Hero onSearch={setSearchQuery} />
-
-      {/* ── Floating Stats Bar (position:fixed, draggable) ── */}
-      <StatsBar apps={apps} paperCount={totalPaperCount} />
 
       {/* ── Platform Section ── */}
       <section
@@ -231,6 +251,8 @@ export const Home = () => {
                   external_url={paper.external_url ?? ''}
                   source={paper.source ?? ''}
                   author_name={paper.author_name}
+                  article_author_handle={(paper as any).article_author_handle ?? null}
+                  is_own_article={(paper as any).is_own_article ?? false}
                   created_at={paper.created_at}
                   onClick={() => window.open(paper.external_url, '_blank', 'noopener,noreferrer')}
                 />
@@ -260,7 +282,7 @@ export const Home = () => {
             <div className="scroll-row">
               {featuredApps.map(app => (
                 <div key={app.id} style={{ width: 'min(340px, 80vw)' }}>
-                  <AppCard app={app} onUpvote={handleUpvote} />
+                  <AppCard app={app} onUpvote={handleUpvote} initialUpvoted={userUpvotes.has(app.id)} />
                 </div>
               ))}
             </div>
@@ -367,7 +389,7 @@ export const Home = () => {
               </div>
             ))
           ) : displayedApps.length > 0 ? (
-            displayedApps.map(app => <AppCard key={app.id} app={app} onUpvote={handleUpvote} />)
+            displayedApps.map(app => <AppCard key={app.id} app={app} onUpvote={handleUpvote} initialUpvoted={userUpvotes.has(app.id)} />)
           ) : (
             <div style={{
               gridColumn: '1/-1',

@@ -11,21 +11,21 @@
   justify-content: center;
   gap: var(--space-3);
   width: 100%;
-  padding: var(--space-3);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-strong);
-  background: var(--bg-surface-elevated);
-  color: var(--text-primary);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--gradient-neon);
+  color: #fff;
   font-family: var(--font-primary);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  box-shadow: var(--shadow-glow);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
 
 .ssoBtn:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--border-strong);
+  opacity: 0.9;
   transform: translateY(-1px);
 }
 

@@ -162,9 +162,9 @@ export const AppDetail = () => {
           {/* How to use */}
           <Section icon={<Users size={20} color="var(--accent-secondary)" />} title={t('appDetail.howToUse')}>
             <ol style={{ color: 'var(--text-secondary)', lineHeight: 2, paddingLeft: 'var(--space-6)', margin: 0 }}>
-              <li>Click <strong style={{ color: 'var(--text-primary)' }}>Live Demo</strong> to try it in your browser instantly — no sign-up required.</li>
-              <li>Explore the source code on GitHub to understand how it was vibe-coded.</li>
-              <li>Fork the repository and customise it with your own AI prompt engineering.</li>
+              <li dangerouslySetInnerHTML={{ __html: t(app.demoUrl ? 'appDetail.howToUse.step1.demo' : 'appDetail.howToUse.step1.noDemo') }} />
+              <li>{t('appDetail.howToUse.step2')}</li>
+              <li>{t('appDetail.howToUse.step3')}</li>
             </ol>
           </Section>
 
@@ -213,22 +213,24 @@ export const AppDetail = () => {
         {/* ── RIGHT: Sidebar ── */}
         <aside style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', position: 'sticky', top: '80px' }}>
           {/* Action Buttons */}
-          <a
-            href={app.demoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            id={`detail-demo-${app.id}`}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)',
-              background: 'var(--gradient-neon)', color: '#fff',
-              padding: 'var(--space-3)', borderRadius: 'var(--radius-lg)',
-              fontWeight: 700, fontSize: 'var(--text-base)', boxShadow: 'var(--shadow-glow)',
-              textDecoration: 'none',
-            }}
-          >
-            <ExternalLink size={18} />
-            {t('appDetail.liveDemo')}
-          </a>
+          {app.demoUrl && (
+            <a
+              href={app.demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              id={`detail-demo-${app.id}`}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)',
+                background: 'var(--gradient-neon)', color: '#fff',
+                padding: 'var(--space-3)', borderRadius: 'var(--radius-lg)',
+                fontWeight: 700, fontSize: 'var(--text-base)', boxShadow: 'var(--shadow-glow)',
+                textDecoration: 'none',
+              }}
+            >
+              <ExternalLink size={18} />
+              {t('appDetail.liveDemo')}
+            </a>
+          )}
           <a
             href={app.repoUrl}
             target="_blank"
@@ -298,7 +300,7 @@ export const AppDetail = () => {
 
           {/* Share to LinkedIn */}
           <a
-            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(app.demoUrl)}`}
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(app.demoUrl || app.repoUrl)}`}
             target="_blank"
             rel="noopener noreferrer"
             id={`detail-share-linkedin-${app.id}`}

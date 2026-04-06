@@ -6,7 +6,7 @@ const resources = {
     en: {
         translation: {
             // Navigation
-            "nav.brand": "VibeMarket",
+            "nav.brand": "OpenVibes",
             "nav.search.placeholder": "Search apps…",
             "nav.signOut": "Sign Out",
             "nav.login": "Login",
@@ -29,7 +29,7 @@ const resources = {
 
             // Platform section
             "platform.title": "Built by the community, powered by vibes.",
-            "platform.description": "VibeMarket is the first community‑led marketplace for vibe‑coded applications. Built on open source and designed for collaboration, it lets builders upload their app's codebase and share it with the world. The community can extend, remix, or use the apps right away. It is also a platform to showcase the abilities of non‑developers — proving that anyone can create real‑world tools and applications. Every project is a chance to innovate. Every contribution helps ideas grow. VibeMarket is where creativity meets community, and where open code becomes shared progress.",
+            "platform.description": "OpenVibes is the first community‑led marketplace for vibe‑coded applications. Built on open source and designed for collaboration, it lets builders upload their app's codebase and share it with the world. The community can extend, remix, or use the apps right away. It is also a platform to showcase the abilities of non‑developers — proving that anyone can create real‑world tools and applications. Every project is a chance to innovate. Every contribution helps ideas grow. OpenVibes is where creativity meets community, and where open code becomes shared progress.",
             "stats.appsListed": "Apps Listed",
             "stats.creators": "Creators",
             "stats.totalUpvotes": "Total Upvotes",
@@ -174,7 +174,7 @@ const resources = {
             "templates.category.structure": "Repo Structure",
 
             // Login
-            "login.title": "Welcome back",
+            "login.title": "Sign in / Sign up",
             "login.subtitle": "Sign in to your account to continue",
             "login.orEmail": "or continue with email",
             "login.email": "Email",
@@ -204,12 +204,77 @@ const resources = {
             "register.terms": "By signing up you agree to our Terms of Service and Privacy Policy.",
             "register.checkInbox": "Check your inbox!",
             "register.confirmationMessage": "We've sent a confirmation link to {{email}}. Confirm your email then sign in.",
+
+            // Home (missing keys)
+            "home.noAppsFound": "No apps found. Try a different search or {{submitLink}}",
+            "home.submitYours": "submit yours!",
+
+            // App Detail
+            "appDetail.loading": "Loading app details…",
+            "appDetail.notFound": "App not found",
+            "appDetail.back": "← Back to marketplace",
+            "appDetail.whatItDoes": "What it does",
+            "appDetail.howToUse": "How to use",
+            "appDetail.techStack": "Tech Stack",
+            "appDetail.tags": "Tags",
+            "appDetail.liveDemo": "Live Demo",
+            "appDetail.sourceCode": "Source Code",
+            "appDetail.upvote": "Upvote",
+            "appDetail.upvoted": "Upvoted",
+            "appDetail.creator": "Creator",
+            "appDetail.category": "Category",
+            "appDetail.published": "Published",
+            "appDetail.shareLinkedIn": "Share on LinkedIn",
+            "appDetail.howToUse.step1.demo": "Click <strong>Live Demo</strong> to try it instantly in your browser — no sign-up required.",
+            "appDetail.howToUse.step1.noDemo": "Visit the source code to learn more about how this app works.",
+            "appDetail.howToUse.step2": "Explore the source code on GitHub to see how it was vibe-coded.",
+            "appDetail.howToUse.step3": "Fork the repository and customise it with your own AI prompt engineering.",
+
+            // Onboarding
+            "onboarding.title": "Complete your profile",
+            "onboarding.subtitle": "Help the community know who you are. You can update this anytime.",
+            "onboarding.field.fullName": "Full Name",
+            "onboarding.field.email": "Email",
+            "onboarding.placeholder.fullName": "Your full name",
+            "onboarding.button.save": "Save Profile",
+            "onboarding.button.saving": "Saving…",
+            "onboarding.button.skip": "Skip for now",
+
+            // Profile page
+            "nav.profile": "Profile",
+            "profile.title": "Your Profile",
+            "profile.subtitle": "Manage your account details and social links.",
+            "profile.section.basics": "Basic Info",
+            "profile.section.social": "Social Profiles",
+            "profile.hint.social": "Adding a platform profile lets you submit articles from that platform.",
+            "profile.field.fullName": "Full Name",
+            "profile.field.email": "Email",
+            "profile.placeholder.fullName": "Your full name",
+            "profile.saved": "Profile updated!",
+            "profile.button.save": "Save Changes",
+            "profile.button.saving": "Saving…",
+            "profile.notLoggedIn": "Please sign in to view your profile.",
+            "profile.cooldown.title": "Submission Cooldown Active",
+            "profile.cooldown.body": "Your social links were recently updated. Article submissions are paused for {{hours}} more hour(s) to prevent abuse.",
+
+            // Whitepapers – validation errors
+            "whitepaper.error.profileRequired": "Add your {{platform}} profile URL in your Profile settings before submitting {{platform}} articles.",
+            "whitepaper.error.cooldown": "Article submissions are paused for {{hours}} more hour(s) because your social links were recently updated.",
+            "whitepaper.error.authorMismatch": "The article appears to be by \"{{articleHandle}}\" but your {{platform}} profile shows \"{{profileHandle}}\". You can only self-declare authorship for your own content.",
+            "whitepaper.error.noApp": "You need to submit at least one app before sharing articles.",
+            "whitepaper.error.noSocialLinks": "Add at least one social profile link in your Profile before submitting articles.",
+            "whitepaper.gate.noApp.title": "Submit an app first",
+            "whitepaper.gate.noApp.body": "Only builders who have submitted at least one app can share articles. It keeps the community grounded in real-world vibe coding.",
+            "whitepaper.gate.noApp.cta": "Submit Your App",
+            "whitepaper.gate.noSocial.title": "Add a social profile first",
+            "whitepaper.gate.noSocial.body": "Link at least one social profile (LinkedIn, Medium, GitHub…) in your profile so we can verify articles belong to you.",
+            "whitepaper.gate.noSocial.cta": "Go to Profile",
         }
     },
     es: {
         translation: {
             // Navigation
-            "nav.brand": "VibeMarket",
+            "nav.brand": "OpenVibes",
             "nav.search.placeholder": "Buscar apps…",
             "nav.signOut": "Cerrar Sesión",
             "nav.login": "Iniciar Sesión",
@@ -232,7 +297,7 @@ const resources = {
 
             // Platform section
             "platform.title": "Construido por la comunidad, potenciado por vibes.",
-            "platform.description": "VibeMarket es el primer mercado liderado por la comunidad para aplicaciones codificadas al vibe. Construido sobre código abierto y diseñado para la colaboración, permite a los creadores subir el código de su app y compartirlo con el mundo. La comunidad puede extenderlo, remezclarlo o usarlo de inmediato. También es una plataforma para demostrar las capacidades de quienes no son desarrolladores, probando que cualquiera puede crear herramientas y aplicaciones reales. Cada proyecto es una oportunidad para innovar. Cada contribución ayuda a que las ideas crezcan. VibeMarket es donde la creatividad se encuentra con la comunidad, y donde el código abierto se convierte en progreso compartido.",
+            "platform.description": "OpenVibes es el primer mercado liderado por la comunidad para aplicaciones codificadas al vibe. Construido sobre código abierto y diseñado para la colaboración, permite a los creadores subir el código de su app y compartirlo con el mundo. La comunidad puede extenderlo, remezclarlo o usarlo de inmediato. También es una plataforma para demostrar las capacidades de quienes no son desarrolladores, probando que cualquiera puede crear herramientas y aplicaciones reales. Cada proyecto es una oportunidad para innovar. Cada contribución ayuda a que las ideas crezcan. OpenVibes es donde la creatividad se encuentra con la comunidad, y donde el código abierto se convierte en progreso compartido.",
             "stats.appsListed": "Apps Listadas",
             "stats.creators": "Creadores",
             "stats.totalUpvotes": "Votos Totales",
@@ -302,7 +367,7 @@ const resources = {
             "submit.placeholder.longDescription": "Describe qué hace tu app, por qué la construiste y qué la hace especial…",
             "submit.error.thumbnailUpload": "Error al subir miniatura: {{message}}",
             "submit.error.insert": "Error al enviar: {{message}}",
-            "login.title": "Bienvenido de nuevo",
+            "login.title": "Iniciar sesión / Registrarse",
             "login.subtitle": "Inicia sesión en tu cuenta para continuar",
             "login.orEmail": "o continúa con correo electrónico",
             "login.email": "Correo electrónico",
@@ -351,6 +416,51 @@ const resources = {
             "appDetail.category": "Categoría",
             "appDetail.published": "Publicado",
             "appDetail.shareLinkedIn": "Compartir en LinkedIn",
+            "appDetail.howToUse.step1.demo": "Haz clic en <strong>Demo en vivo</strong> para probarlo en tu navegador al instante — sin registro.",
+            "appDetail.howToUse.step1.noDemo": "Visita el código fuente para aprender más sobre cómo funciona esta app.",
+            "appDetail.howToUse.step2": "Explora el código fuente en GitHub para ver cómo fue vibe-coded.",
+            "appDetail.howToUse.step3": "Haz un fork del repositorio y personalízalo con tu propia ingeniería de prompts de IA.",
+
+            // Onboarding
+            "onboarding.title": "Completa tu perfil",
+            "onboarding.subtitle": "Ayuda a la comunidad a conocerte. Puedes actualizarlo cuando quieras.",
+            "onboarding.field.fullName": "Nombre completo",
+            "onboarding.field.email": "Correo electrónico",
+            "onboarding.placeholder.fullName": "Tu nombre completo",
+            "onboarding.button.save": "Guardar perfil",
+            "onboarding.button.saving": "Guardando…",
+            "onboarding.button.skip": "Omitir por ahora",
+
+            // Profile page
+            "nav.profile": "Perfil",
+            "profile.title": "Tu Perfil",
+            "profile.subtitle": "Gestiona tus datos y perfiles de redes sociales.",
+            "profile.section.basics": "Información Básica",
+            "profile.section.social": "Perfiles Sociales",
+            "profile.hint.social": "Agregar un perfil de plataforma te permite enviar artículos de esa plataforma.",
+            "profile.field.fullName": "Nombre Completo",
+            "profile.field.email": "Correo Electrónico",
+            "profile.placeholder.fullName": "Tu nombre completo",
+            "profile.saved": "¡Perfil actualizado!",
+            "profile.button.save": "Guardar Cambios",
+            "profile.button.saving": "Guardando…",
+            "profile.notLoggedIn": "Inicia sesión para ver tu perfil.",
+            "profile.cooldown.title": "Enfriamiento de Envíos Activo",
+            "profile.cooldown.body": "Tus enlaces sociales se actualizaron recientemente. Los envíos de artículos están en pausa por {{hours}} hora(s) más para prevenir abusos.",
+
+            // Whitepapers – validation errors
+            "whitepaper.error.profileRequired": "Agrega tu URL de perfil en {{platform}} en la configuración de Perfil antes de enviar artículos de {{platform}}.",
+            "whitepaper.error.cooldown": "Los envíos de artículos están en pausa por {{hours}} hora(s) más porque tus enlaces sociales se actualizaron recientemente.",
+            "whitepaper.error.authorMismatch": "El artículo parece ser de \"{{articleHandle}}\" pero tu perfil de {{platform}} muestra \"{{profileHandle}}\". Solo puedes declarar autoría de tu propio contenido.",
+            "whitepaper.error.noApp": "Necesitas enviar al menos una app antes de compartir artículos.",
+            "whitepaper.error.noSocialLinks": "Agrega al menos un perfil social en tu Perfil antes de enviar artículos.",
+            "whitepaper.gate.noApp.title": "Envía una app primero",
+            "whitepaper.gate.noApp.body": "Solo los constructores que han enviado al menos una app pueden compartir artículos. Mantiene a la comunidad enfocada en el vibe coding real.",
+            "whitepaper.gate.noApp.cta": "Enviar tu App",
+            "whitepaper.gate.noSocial.title": "Agrega un perfil social primero",
+            "whitepaper.gate.noSocial.body": "Vincula al menos un perfil social (LinkedIn, Medium, GitHub…) en tu perfil para que podamos verificar que los artículos te pertenecen.",
+            "whitepaper.gate.noSocial.cta": "Ir al Perfil",
+
             "category.cliTool": "Herramienta CLI",
             "category.productivity": "Productividad",
             "category.game": "Juego",
@@ -414,7 +524,7 @@ const resources = {
     zh: {
         translation: {
             // Navigation
-            "nav.brand": "VibeMarket",
+            "nav.brand": "OpenVibes",
             "nav.search.placeholder": "搜索应用…",
             "nav.signOut": "退出登录",
             "nav.login": "登录",
@@ -437,7 +547,7 @@ const resources = {
 
             // Platform section
             "platform.title": "由社区构建，由 vibes 驱动。",
-            "platform.description": "VibeMarket 是首个由社区主导的 vibe 编程应用市场。它基于开源构建，专为协作而设计，让创作者能够上传应用代码库并与全世界分享。社区可以随时扩展、二次创作或直接使用这些应用。它也是一个展示非开发者能力的平台——证明任何人都能创造真实的工具和应用。每个项目都是创新的机会，每一份贡献都让创意得以生长。VibeMarket 是创意与社区交汇之处，是开放代码成为共同进步的地方。",
+            "platform.description": "OpenVibes 是首个由社区主导的 vibe 编程应用市场。它基于开源构建，专为协作而设计，让创作者能够上传应用代码库并与全世界分享。社区可以随时扩展、二次创作或直接使用这些应用。它也是一个展示非开发者能力的平台——证明任何人都能创造真实的工具和应用。每个项目都是创新的机会，每一份贡献都让创意得以生长。OpenVibes 是创意与社区交汇之处，是开放代码成为共同进步的地方。",
             "stats.appsListed": "已列出应用",
             "stats.creators": "创作者",
             "stats.totalUpvotes": "总投票数",
@@ -507,7 +617,7 @@ const resources = {
             "submit.placeholder.longDescription": "描述你的应用做什么、为什么构建它以及它有什么特别之处…",
             "submit.error.thumbnailUpload": "缩略图上传失败：{{message}}",
             "submit.error.insert": "提交失败：{{message}}",
-            "login.title": "欢迎回来",
+            "login.title": "登录 / 注册",
             "login.subtitle": "登录你的账户以继续",
             "login.orEmail": "或使用电子邮件继续",
             "login.email": "电子邮件",
@@ -556,6 +666,51 @@ const resources = {
             "appDetail.category": "类别",
             "appDetail.published": "已发布",
             "appDetail.shareLinkedIn": "分享到 LinkedIn",
+            "appDetail.howToUse.step1.demo": "点击<strong>实时演示</strong>，无需注册即可在浏览器中立即体验。",
+            "appDetail.howToUse.step1.noDemo": "访问源代码，了解更多关于此应用的工作原理。",
+            "appDetail.howToUse.step2": "在 GitHub 上探索源代码，了解它是如何 vibe-coded 的。",
+            "appDetail.howToUse.step3": "Fork 存储库，并用你自己的 AI 提示工程进行自定义。",
+
+            // Onboarding
+            "onboarding.title": "完善您的个人资料",
+            "onboarding.subtitle": "帮助社区了解您。您可以随时更新。",
+            "onboarding.field.fullName": "全名",
+            "onboarding.field.email": "电子邮件",
+            "onboarding.placeholder.fullName": "您的全名",
+            "onboarding.button.save": "保存资料",
+            "onboarding.button.saving": "保存中…",
+            "onboarding.button.skip": "暂时跳过",
+
+            // Profile page
+            "nav.profile": "个人资料",
+            "profile.title": "您的资料",
+            "profile.subtitle": "管理您的账户详情和社交资料。",
+            "profile.section.basics": "基本信息",
+            "profile.section.social": "社交主页",
+            "profile.hint.social": "添加平台主页链接后，您才能提交该平台的文章。",
+            "profile.field.fullName": "全名",
+            "profile.field.email": "电子邮件",
+            "profile.placeholder.fullName": "您的全名",
+            "profile.saved": "资料已更新！",
+            "profile.button.save": "保存更改",
+            "profile.button.saving": "保存中…",
+            "profile.notLoggedIn": "请登录以查看您的资料。",
+            "profile.cooldown.title": "提交冷却期激活",
+            "profile.cooldown.body": "您的社交链接最近已更新。文章提交暂停 {{hours}} 小时，以防滥用。",
+
+            // Whitepapers – validation errors
+            "whitepaper.error.profileRequired": "请先在个人资料设置中添加您的 {{platform}} 主页 URL，然后再提交 {{platform}} 文章。",
+            "whitepaper.error.cooldown": "由于您的社交链接最近已更新，文章提交暂停 {{hours}} 小时。",
+            "whitepaper.error.authorMismatch": "该文章的作者似乎是 \"{{articleHandle}}\"，但您的 {{platform}} 资料显示为 \"{{profileHandle}}\"。您只能为自己的内容声明作者身份。",
+            "whitepaper.error.noApp": "您需要先提交至少一个应用，才能分享文章。",
+            "whitepaper.error.noSocialLinks": "在提交文章之前，请在您的资料中添加至少一个社交主页链接。",
+            "whitepaper.gate.noApp.title": "请先提交一个应用",
+            "whitepaper.gate.noApp.body": "只有至少提交过一个应用的开发者才能分享文章，这让社区保持与真实 vibe coding 的联系。",
+            "whitepaper.gate.noApp.cta": "提交您的应用",
+            "whitepaper.gate.noSocial.title": "请先添加社交主页",
+            "whitepaper.gate.noSocial.body": "请在您的资料中关联至少一个社交主页（LinkedIn、Medium、GitHub…），以便我们验证文章归属。",
+            "whitepaper.gate.noSocial.cta": "前往资料页",
+
             "category.cliTool": "CLI 工具",
             "category.productivity": "生产力",
             "category.game": "游戏",

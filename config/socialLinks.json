@@ -1,0 +1,44 @@
+[
+    {
+        "id": "linkedin",
+        "label": "LinkedIn",
+        "placeholder": "https://linkedin.com/in/username",
+        "icon": "linkedin",
+        "enabled": true
+    },
+    {
+        "id": "medium",
+        "label": "Medium",
+        "placeholder": "https://medium.com/@username",
+        "icon": "medium",
+        "enabled": true
+    },
+    {
+        "id": "github",
+        "label": "GitHub",
+        "placeholder": "https://github.com/username",
+        "icon": "github",
+        "enabled": true
+    },
+    {
+        "id": "twitter",
+        "label": "X (Twitter)",
+        "placeholder": "https://x.com/username",
+        "icon": "twitter",
+        "enabled": false
+    },
+    {
+        "id": "devto",
+        "label": "Dev.to",
+        "placeholder": "https://dev.to/username",
+        "icon": "devto",
+        "enabled": false
+    },
+    {
+        "id": "hashnode",
+        "label": "Hashnode",
+        "placeholder": "https://hashnode.com/@username",
+        "icon": "hashnode",
+        "enabled": false
+    }
+]

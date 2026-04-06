@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Link2 } from 'lucide-react';
+import { FileText, Plus, Link2, CheckCircle2, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useVibeAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { PaperCard } from '../components/PaperCard/PaperCard';
+import socialLinksConfig from '../../config/socialLinks.json';
 import styles from './Submit.module.css';
 
 interface Whitepaper {
@@ -16,6 +17,8 @@ interface Whitepaper {
     source: string;
     author_name: string;
     author_id: string;
+    is_own_article: boolean;
+    article_author_handle: string | null;
 }
 
 interface FormData {
@@ -23,13 +26,85 @@ interface FormData {
     description: string;
     url: string;
     source: string;
+    isOwnArticle: boolean;
 }
 
 const SOURCES = ['Medium', 'LinkedIn', 'Dev.to', 'Substack', 'Hashnode', 'GitHub', 'Other'];
 
-const EMPTY_FORM: FormData = { title: '', description: '', url: '', source: 'Medium' };
+const EMPTY_FORM: FormData = { title: '', description: '', url: '', source: 'Medium', isOwnArticle: false };
 
 const isValidUrl = (s: string) => { try { return Boolean(new URL(s)); } catch { return false; } };
+
+/** Detect the publishing platform from a URL. */
+const detectPlatform = (url: string): string => {
+    try {
+        const h = new URL(url).hostname.replace('www.', '');
+        if (h === 'medium.com' || h.endsWith('.medium.com')) return 'Medium';
+        if (h === 'linkedin.com') return 'LinkedIn';
+        if (h === 'dev.to') return 'Dev.to';
+        if (h === 'substack.com' || h.endsWith('.substack.com')) return 'Substack';
+        if (h === 'hashnode.com' || h.endsWith('.hashnode.dev')) return 'Hashnode';
+        if (h === 'github.com') return 'GitHub';
+    } catch { /* ignore */ }
+    return 'Other';
+};
+
+/**
+ * Best-effort extraction of the article author handle from the URL.
+ * Returns a human-readable string like "@username on Medium" or null if not determinable.
+ * Note: full OAuth verification is not possible client-side (Medium API deprecated,
+ * LinkedIn OAuth requires a server-side token exchange). This is a self-declaration flow.
+ */
+const extractAuthorHandle = (url: string): string | null => {
+    try {
+        const u = new URL(url);
+        const h = u.hostname.replace('www.', '');
+        // Medium: medium.com/@username/... or username.medium.com/...
+        if (h === 'medium.com') {
+            const m = u.pathname.match(/^\/@([^/]+)/);
+            if (m) return `@${m[1]}`;
+        }
+        if (h.endsWith('.medium.com') && h !== 'medium.com') {
+            return `@${h.replace('.medium.com', '')}`;
+        }
+        // Dev.to: dev.to/username/slug
+        if (h === 'dev.to') {
+            const m = u.pathname.match(/^\/([^/]+)\//);
+            if (m) return `@${m[1]}`;
+        }
+        // Substack: username.substack.com
+        if (h.endsWith('.substack.com') && h !== 'substack.com') {
+            return h.replace('.substack.com', '');
+        }
+        // Hashnode: username.hashnode.dev
+        if (h.endsWith('.hashnode.dev') && h !== 'hashnode.dev') {
+            return `@${h.replace('.hashnode.dev', '')}`;
+        }
+        // LinkedIn: /in/username/ profile pattern OR /posts/username_... post pattern
+        if (h === 'linkedin.com') {
+            const inMatch = u.pathname.match(/\/in\/([^/]+)/);
+            if (inMatch) return inMatch[1];
+            const postMatch = u.pathname.match(/\/posts\/([^_/]+)/);
+            if (postMatch) return postMatch[1];
+        }
+    } catch { /* ignore */ }
+    return null;
+};
+
+/** Maps detectPlatform() return values to socialLinks.json ids */
+const PLATFORM_TO_SOCIAL_ID: Record<string, string> = {
+    'Medium': 'medium',
+    'LinkedIn': 'linkedin',
+    'Dev.to': 'devto',
+    'Hashnode': 'hashnode',
+    'GitHub': 'github',
+};
+
+const enabledSocialIds = new Set(
+    (socialLinksConfig as { id: string; enabled: boolean }[])
+        .filter(s => s.enabled)
+        .map(s => s.id)
+);
 
 export const Whitepapers = () => {
     const { t } = useTranslation();
@@ -46,7 +121,7 @@ export const Whitepapers = () => {
         setFetchLoading(true);
         const { data } = await supabase
             .from('whitepapers')
-            .select('id, created_at, title, description, external_url, source, author_name, author_id')
+            .select('id, created_at, title, description, external_url, source, author_name, author_id, is_own_article, article_author_handle')
             .order('created_at', { ascending: false });
         setWhitepapers(data ?? []);
         setFetchLoading(false);
@@ -54,7 +129,17 @@ export const Whitepapers = () => {
 
     useEffect(() => { fetchWhitepapers(); }, []);
 
-    const set = (field: keyof FormData, value: string) =>
+    // Auto-detect platform and author handle when URL changes
+    const handleUrlChange = (url: string) => {
+        const platform = detectPlatform(url);
+        setForm(prev => ({
+            ...prev,
+            url,
+            source: platform !== 'Other' ? platform : prev.source,
+        }));
+    };
+
+    const set = (field: keyof FormData, value: string | boolean) =>
         setForm(prev => ({ ...prev, [field]: value }));
 
     const handleSubmit = async () => {
@@ -64,8 +149,50 @@ export const Whitepapers = () => {
             setError('A valid URL is required.');
             return;
         }
+
+        // ── Validation 1: profile link required for known platforms ──────────
+        const platform = detectPlatform(form.url.trim());
+        const socialId = PLATFORM_TO_SOCIAL_ID[platform];
+        if (socialId && enabledSocialIds.has(socialId)) {
+            const profileUrl = user.user_metadata?.[`social_${socialId}`] as string | undefined;
+            if (!profileUrl) {
+                setError(t('whitepaper.error.profileRequired', { platform }));
+                return;
+            }
+        }
+
+        // ── Validation 2: 24-hour cooldown after social link update ──────────
+        const socialUpdatedAt = user.user_metadata?.social_links_updated_at as string | undefined;
+        if (socialUpdatedAt) {
+            const hoursElapsed = (Date.now() - new Date(socialUpdatedAt).getTime()) / (1000 * 60 * 60);
+            if (hoursElapsed < 24) {
+                const hoursLeft = Math.ceil(24 - hoursElapsed);
+                setError(t('whitepaper.error.cooldown', { hours: hoursLeft }));
+                return;
+            }
+        }
+
+        // ── Validation 3: when claiming authorship, article handle must match profile ──
+        if (form.isOwnArticle && socialId) {
+            const profileUrl = user.user_metadata?.[`social_${socialId}`] as string | undefined;
+            if (profileUrl) {
+                const profileHandle = extractAuthorHandle(profileUrl);
+                const articleHandle = extractAuthorHandle(form.url.trim());
+                if (
+                    profileHandle && articleHandle &&
+                    profileHandle.replace('@', '').toLowerCase() !== articleHandle.replace('@', '').toLowerCase()
+                ) {
+                    setError(t('whitepaper.error.authorMismatch', { platform, articleHandle, profileHandle }));
+                    return;
+                }
+            }
+        }
+
         setLoading(true);
         setError(null);
+
+        // Derive the stored handle from the article URL automatically
+        const storedHandle = extractAuthorHandle(form.url.trim());
 
         const { error: insertError } = await supabase.from('whitepapers').insert({
             title: form.title.trim(),
@@ -74,6 +201,8 @@ export const Whitepapers = () => {
             source: form.source || 'Other',
             author_id: user.id,
             author_name: user.user_metadata?.full_name ?? user.email ?? 'Anonymous',
+            is_own_article: form.isOwnArticle,
+            article_author_handle: form.isOwnArticle ? storedHandle : null,
         });
 
         if (insertError) {
@@ -85,6 +214,19 @@ export const Whitepapers = () => {
         }
         setLoading(false);
     };
+
+    // Derived: author handle detected from article URL
+    const detectedHandle = form.url ? extractAuthorHandle(form.url) : null;
+
+    // Derived: profile handle for the detected platform
+    const detectedPlatform = form.url ? detectPlatform(form.url) : null;
+    const detectedSocialId = detectedPlatform ? PLATFORM_TO_SOCIAL_ID[detectedPlatform] : undefined;
+    const profileHandleForPlatform = detectedSocialId
+        ? extractAuthorHandle((user?.user_metadata?.[`social_${detectedSocialId}`] as string | undefined) ?? '')
+        : null;
+    const handleMatches = detectedHandle && profileHandleForPlatform
+        ? detectedHandle.replace('@', '').toLowerCase() === profileHandleForPlatform.replace('@', '').toLowerCase()
+        : null; // null = can't determine
 
     return (
         <div className={styles.page}>
@@ -174,8 +316,14 @@ export const Whitepapers = () => {
                                         className={styles.input}
                                         placeholder="https://medium.com/..."
                                         value={form.url}
-                                        onChange={e => set('url', e.target.value)}
+                                        onChange={e => handleUrlChange(e.target.value)}
                                     />
+                                    {/* Author handle detected from URL */}
+                                    {detectedHandle && (
+                                        <p style={{ fontSize: 'var(--text-xs)', color: 'rgba(168,85,247,0.9)', marginTop: 'var(--space-1)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                            <CheckCircle2 size={11} /> Detected author: <strong>{detectedHandle}</strong> on {form.source}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 'var(--space-2)', color: 'var(--text-primary)' }}>
@@ -189,6 +337,67 @@ export const Whitepapers = () => {
                                         {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                 </div>
+                            </div>
+
+                            {/* Authorship declaration */}
+                            <div style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
+                                <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 'var(--space-3)' }}>
+                                    Are you the author of this article?
+                                </p>
+                                <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => set('isOwnArticle', true)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 6,
+                                            padding: 'var(--space-2) var(--space-4)',
+                                            borderRadius: 'var(--radius-full)',
+                                            border: `1px solid ${form.isOwnArticle ? 'rgba(168,85,247,0.6)' : 'var(--border-subtle)'}`,
+                                            background: form.isOwnArticle ? 'rgba(168,85,247,0.15)' : 'var(--bg-surface-elevated)',
+                                            color: form.isOwnArticle ? '#c084fc' : 'var(--text-secondary)',
+                                            fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer',
+                                        }}
+                                    >
+                                        <CheckCircle2 size={14} /> Yes, I wrote this
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => set('isOwnArticle', false)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 6,
+                                            padding: 'var(--space-2) var(--space-4)',
+                                            borderRadius: 'var(--radius-full)',
+                                            border: `1px solid ${!form.isOwnArticle ? 'rgba(168,85,247,0.6)' : 'var(--border-subtle)'}`,
+                                            background: !form.isOwnArticle ? 'rgba(168,85,247,0.15)' : 'var(--bg-surface-elevated)',
+                                            color: !form.isOwnArticle ? '#c084fc' : 'var(--text-secondary)',
+                                            fontWeight: 600, fontSize: 'var(--text-sm)', cursor: 'pointer',
+                                        }}
+                                    >
+                                        <Share2 size={14} /> No, I'm sharing it
+                                    </button>
+                                </div>
+
+                                {/* Auto-match feedback — shown when a known platform is detected */}
+                                {form.isOwnArticle && detectedHandle && (
+                                    <div style={{ marginTop: 'var(--space-4)', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        {handleMatches === true && (
+                                            <span style={{ color: '#34d399', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <CheckCircle2 size={13} />
+                                                Article by <strong>{detectedHandle}</strong> — matches your {detectedPlatform} profile. ✓
+                                            </span>
+                                        )}
+                                        {handleMatches === false && (
+                                            <span style={{ color: '#f87171', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                ⚠ Article author ({detectedHandle}) doesn't match your {detectedPlatform} profile ({profileHandleForPlatform}). You cannot claim authorship.
+                                            </span>
+                                        )}
+                                        {handleMatches === null && (
+                                            <span style={{ color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <CheckCircle2 size={13} /> Detected author: <strong>{detectedHandle}</strong> on {form.source}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {error && (
@@ -237,6 +446,8 @@ export const Whitepapers = () => {
                                 external_url={wp.external_url}
                                 source={wp.source}
                                 author_name={wp.author_name}
+                                article_author_handle={wp.article_author_handle}
+                                is_own_article={wp.is_own_article}
                                 created_at={wp.created_at}
                                 onClick={() => window.open(wp.external_url, '_blank', 'noopener,noreferrer')}
                             />

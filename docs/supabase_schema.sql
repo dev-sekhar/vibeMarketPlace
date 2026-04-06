@@ -83,6 +83,12 @@ CREATE POLICY "Whitepapers are publicly readable"        ON public.whitepapers F
 CREATE POLICY "Authenticated users can insert whitepapers" ON public.whitepapers FOR INSERT WITH CHECK (auth.uid() = author_id);
 CREATE POLICY "Authors can delete their own whitepapers"  ON public.whitepapers FOR DELETE USING (auth.uid() = author_id);
 
+-- MIGRATION: add authorship declaration columns
+ALTER TABLE public.whitepapers
+  ADD COLUMN IF NOT EXISTS is_own_article       BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS article_author_handle TEXT DEFAULT NULL;
+-- ============================================================
+
 -- ============================================================
 -- MIGRATION: whitepapers — switch from content to external_url
 -- Run this in Supabase Dashboard → SQL Editor if the table

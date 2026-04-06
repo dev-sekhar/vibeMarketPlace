@@ -51,6 +51,10 @@
   margin-bottom: var(--space-6);
 }
 
+.centered {
+  text-align: center;
+}
+
 /* Divider */
 .divider {
   display: flex;

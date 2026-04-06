@@ -23,6 +23,12 @@ interface AuthContextValue {
   signInWithEmail: (email: string, password: string) => Promise<string | null>;
   signUpWithEmail: (name: string, email: string, password: string, geo?: GeoData) => Promise<string | null>;
   signOut: () => Promise<void>;
+  /**
+   * Update full_name and/or social links in user metadata.
+   * If any social link value changes, `social_links_updated_at` is stamped to
+   * enforce the 24-hour article-submission cooldown.
+   */
+  updateProfile: (fullName: string, socialLinks: Record<string, string>) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -121,8 +127,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
   };
 
+  const updateProfile = async (fullName: string, socialLinks: Record<string, string>): Promise<string | null> => {
+    const prevMeta = user?.user_metadata ?? {};
+    const updatedMeta: Record<string, unknown> = { full_name: fullName };
+
+    let anyLinkChanged = false;
+    for (const [id, val] of Object.entries(socialLinks)) {
+      const key = `social_${id}`;
+      updatedMeta[key] = val;
+      // Cooldown only triggers when an existing (non-empty) link is replaced with
+      // a different value. Adding a link for the first time (empty → value) or
+      // clearing it (value → empty) does NOT start the cooldown.
+      const prev = (prevMeta[key] as string | undefined) ?? '';
+      if (prev && val && prev !== val) anyLinkChanged = true;
+    }
+
+    if (anyLinkChanged) {
+      updatedMeta.social_links_updated_at = new Date().toISOString();
+    }
+
+    const { error } = await supabase.auth.updateUser({ data: updatedMeta });
+    return error?.message ?? null;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, sessionTimeLeft, isSessionExpiring, signInWithGoogle, signInWithGitHub, signInWithEmail, signUpWithEmail, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, sessionTimeLeft, isSessionExpiring, signInWithGoogle, signInWithGitHub, signInWithEmail, signUpWithEmail, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

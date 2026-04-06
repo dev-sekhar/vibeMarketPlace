@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUp, ExternalLink, Code2, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import styles from './AppCard.module.css';
 interface AppCardProps {
   app: VibeApp;
   onUpvote?: (appId: string, delta: number) => void;
+  initialUpvoted?: boolean;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -20,11 +21,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   'CLI Tool': '#64748b',
 };
 
-export const AppCard = ({ app, onUpvote }: AppCardProps) => {
-  const [upvoted, setUpvoted] = useState(false);
+export const AppCard = ({ app, onUpvote, initialUpvoted = false }: AppCardProps) => {
+  const [upvoted, setUpvoted] = useState(initialUpvoted);
   const [votes, setVotes] = useState(app.upvotes);
   const { t } = useTranslation();
   const categoryColor = CATEGORY_COLORS[app.category] ?? '#6e6e77';
+
+  // Sync when parent resolves async upvote data or reverts an optimistic update
+  useEffect(() => { setUpvoted(initialUpvoted); }, [initialUpvoted]);
+  useEffect(() => { setVotes(app.upvotes); }, [app.upvotes]);
 
   console.log(`[AppCard] Rendering ${app.name} with thumbnail: ${app.thumbnail}`);
 
