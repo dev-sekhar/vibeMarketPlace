@@ -130,28 +130,6 @@ export const Navbar = () => {
         }}>
           {t('nav.templates')}
         </Link>
-        <button
-          id="nav-lang"
-          onClick={handleLanguageChange}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-1)',
-            color: 'var(--text-secondary)',
-            fontSize: 'var(--text-sm)',
-            fontWeight: 500,
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 'var(--space-1)',
-            borderRadius: 'var(--radius-sm)',
-          }}
-          aria-label="Switch language"
-        >
-          <Globe size={16} />
-          {i18n.language.toUpperCase()}
-        </button>
-
         {!loading && user && isSessionExpiring && sessionTimeLeft !== null && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '6px',
@@ -239,6 +217,27 @@ export const Navbar = () => {
             </Link>
           )
         )}
+        <button
+          id="nav-lang"
+          onClick={handleLanguageChange}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-1)',
+            color: 'var(--text-secondary)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 500,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 'var(--space-1)',
+            borderRadius: 'var(--radius-sm)',
+          }}
+          aria-label="Switch language"
+        >
+          <Globe size={16} />
+          {i18n.language.toUpperCase()}
+        </button>
       </div>
     </nav>
   );
