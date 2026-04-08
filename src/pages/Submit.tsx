@@ -96,7 +96,7 @@ export const Submit = () => {
       whatsappUrl: (user.user_metadata?.social_whatsapp as string | undefined) ?? '',
       telegramUrl: (user.user_metadata?.social_telegram as string | undefined) ?? '',
     }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {

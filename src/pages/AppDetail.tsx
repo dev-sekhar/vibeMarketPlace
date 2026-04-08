@@ -46,10 +46,10 @@ export const AppDetail = () => {
           .maybeSingle();
         const communityLinks: { platform: 'slack' | 'whatsapp' | 'telegram'; url: string }[] = (!profileError && profile)
           ? [
-              profile.slack_url && { platform: 'slack' as const, url: profile.slack_url },
-              profile.whatsapp_url && { platform: 'whatsapp' as const, url: profile.whatsapp_url },
-              profile.telegram_url && { platform: 'telegram' as const, url: profile.telegram_url },
-            ].filter(Boolean) as { platform: 'slack' | 'whatsapp' | 'telegram'; url: string }[]
+            profile.slack_url && { platform: 'slack' as const, url: profile.slack_url },
+            profile.whatsapp_url && { platform: 'whatsapp' as const, url: profile.whatsapp_url },
+            profile.telegram_url && { platform: 'telegram' as const, url: profile.telegram_url },
+          ].filter(Boolean) as { platform: 'slack' | 'whatsapp' | 'telegram'; url: string }[]
           : (data.community_links ?? []);
         const mapped: VibeApp = {
           id: data.id,
