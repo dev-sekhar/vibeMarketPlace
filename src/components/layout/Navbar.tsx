@@ -12,7 +12,7 @@ const formatTimeLeft = (seconds: number): string => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
-const fmtCount = (n: number): string => n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+
 
 export const Navbar = () => {
   const navigate = useNavigate();

@@ -129,7 +129,7 @@ const resources = {
 
             // Whitepapers
             "whitepaper.page.title": "Research & Whitepapers",
-            "whitepaper.page.subtitle": "Found a great article about vibe coding or AI development? Submit the link and share it with the community.",
+            "whitepaper.page.subtitle": "Want to share articles or whitepapers authored by you with the community?",
             "whitepaper.form.title": "Publish a New Whitepaper",
             "whitepaper.field.title": "Whitepaper Title",
             "whitepaper.field.description": "Short Description",
@@ -477,7 +477,7 @@ const resources = {
 
             // Whitepapers
             "whitepaper.page.title": "Investigación & Documentos",
-            "whitepaper.page.subtitle": "¿Encontraste un gran artículo sobre vibe coding o desarrollo con IA? Envía el enlace y compártelo con la comunidad.",
+            "whitepaper.page.subtitle": "¿Quieres compartir artículos o documentos escritos por ti con la comunidad?",
             "whitepaper.form.title": "Publicar un Nuevo Documento",
             "whitepaper.field.title": "Título del Documento",
             "whitepaper.field.description": "Descripción Breve",
@@ -728,7 +728,7 @@ const resources = {
 
             // Whitepapers
             "whitepaper.page.title": "研究 & 白皮书",
-            "whitepaper.page.subtitle": "发现了关于 vibe coding 或 AI 开发的好文章？提交链接，与社区共享。",
+            "whitepaper.page.subtitle": "想与社区分享由你撰写的文章或白皮书吗？",
             "whitepaper.form.title": "发布新白皮书",
             "whitepaper.field.title": "白皮书标题",
             "whitepaper.field.description": "简短描述",
