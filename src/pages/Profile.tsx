@@ -11,10 +11,19 @@ interface SocialLinkConfig {
     label: string;
     placeholder: string;
     icon: string;
+    type: string;
     enabled: boolean;
 }
 
-const enabledSocialLinks = (socialLinksConfig as SocialLinkConfig[]).filter(s => s.enabled);
+const allEnabledLinks = (socialLinksConfig as SocialLinkConfig[]).filter(s => s.enabled);
+const enabledSocialLinks = allEnabledLinks.filter(s => s.type === 'social');
+const enabledCommunityLinks = allEnabledLinks.filter(s => s.type === 'community');
+
+/** Extract the first https:// URL from a pasted string (handles share messages like "Join my group: https://..."). */
+const extractUrl = (text: string): string => {
+    const match = text.match(/https?:\/\/[^\s]+/);
+    return match ? match[0] : text;
+};
 
 /** Hours remaining in the 24-hour cooldown after social links were last updated. */
 const getCooldownHoursLeft = (updatedAt: string | undefined): number => {
@@ -40,7 +49,7 @@ export const Profile = () => {
         if (!user) return;
         setFullName((user.user_metadata?.full_name as string | undefined) ?? '');
         const social: Record<string, string> = {};
-        for (const link of enabledSocialLinks) {
+        for (const link of allEnabledLinks) {
             social[link.id] = (user.user_metadata?.[`social_${link.id}`] as string | undefined) ?? '';
         }
         setSocialValues(social);
@@ -147,6 +156,39 @@ export const Profile = () => {
                                     type="url"
                                     value={socialValues[link.id] ?? ''}
                                     onChange={e => setSocialValues(prev => ({ ...prev, [link.id]: e.target.value }))}
+                                    placeholder={link.placeholder}
+                                    className={styles.input}
+                                    autoComplete="url"
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* ── Community Links ── */}
+                    <h2 className={styles.sectionHeading} style={{ marginTop: 'var(--space-8)' }}>
+                        Community Links
+                    </h2>
+                    <p className={styles.hint}>
+                        Invite links to your Slack, WhatsApp or Telegram community — shown on your app cards so users can connect with you directly.
+                    </p>
+
+                    <div className={styles.fieldGroup}>
+                        {enabledCommunityLinks.map(link => (
+                            <div key={link.id} className={styles.field}>
+                                <label className={styles.label} htmlFor={`p-${link.id}`}>{link.label}</label>
+                                <input
+                                    id={`p-${link.id}`}
+                                    type="url"
+                                    value={socialValues[link.id] ?? ''}
+                                    onChange={e => setSocialValues(prev => ({ ...prev, [link.id]: e.target.value }))}
+                                    onPaste={e => {
+                                        const pasted = e.clipboardData.getData('text');
+                                        const url = extractUrl(pasted);
+                                        if (url !== pasted) {
+                                            e.preventDefault();
+                                            setSocialValues(prev => ({ ...prev, [link.id]: url }));
+                                        }
+                                    }}
                                     placeholder={link.placeholder}
                                     className={styles.input}
                                     autoComplete="url"

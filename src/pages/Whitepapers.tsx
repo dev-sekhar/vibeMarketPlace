@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useVibeAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { PaperCard } from '../components/PaperCard/PaperCard';
+import { getBadge, type Badge } from '../lib/badge';
 import socialLinksConfig from '../../config/socialLinks.json';
 import styles from './Submit.module.css';
 
@@ -17,6 +18,7 @@ interface Whitepaper {
     source: string;
     author_name: string;
     author_id: string;
+    author_linkedin_url: string | null;
     is_own_article: boolean;
     article_author_handle: string | null;
 }
@@ -111,6 +113,7 @@ export const Whitepapers = () => {
     const navigate = useNavigate();
     const { user } = useVibeAuth();
     const [whitepapers, setWhitepapers] = useState<Whitepaper[]>([]);
+    const [authorBadges, setAuthorBadges] = useState<Record<string, Badge | null>>({});
     const [fetchLoading, setFetchLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -121,9 +124,33 @@ export const Whitepapers = () => {
         setFetchLoading(true);
         const { data } = await supabase
             .from('whitepapers')
-            .select('id, created_at, title, description, external_url, source, author_name, author_id, is_own_article, article_author_handle')
+            .select('id, created_at, title, description, external_url, source, author_name, author_id, author_linkedin_url, is_own_article, article_author_handle')
             .order('created_at', { ascending: false });
-        setWhitepapers(data ?? []);
+        const items: Whitepaper[] = data ?? [];
+        setWhitepapers(items);
+
+        // Compute badges per author (apps submitted + papers submitted)
+        const authorIds = [...new Set(items.map(w => w.author_id))];
+        if (authorIds.length > 0) {
+            const { data: authorApps } = await supabase
+                .from('apps')
+                .select('author_id')
+                .in('author_id', authorIds);
+            const appCounts: Record<string, number> = {};
+            (authorApps ?? []).forEach((a: { author_id: string }) => {
+                appCounts[a.author_id] = (appCounts[a.author_id] ?? 0) + 1;
+            });
+            const paperCounts: Record<string, number> = {};
+            items.forEach(w => {
+                paperCounts[w.author_id] = (paperCounts[w.author_id] ?? 0) + 1;
+            });
+            const badges: Record<string, Badge | null> = {};
+            authorIds.forEach(id => {
+                badges[id] = getBadge((appCounts[id] ?? 0) + (paperCounts[id] ?? 0));
+            });
+            setAuthorBadges(badges);
+        }
+
         setFetchLoading(false);
     };
 
@@ -201,6 +228,9 @@ export const Whitepapers = () => {
             source: form.source || 'Other',
             author_id: user.id,
             author_name: user.user_metadata?.full_name ?? user.email ?? 'Anonymous',
+            author_linkedin_url: socialId
+                ? (user.user_metadata?.[`social_${socialId}`] as string | undefined) ?? null
+                : (user.user_metadata?.social_linkedin as string | undefined) ?? null,
             is_own_article: form.isOwnArticle,
             article_author_handle: form.isOwnArticle ? storedHandle : null,
         });
@@ -253,7 +283,7 @@ export const Whitepapers = () => {
                             }}
                         >
                             <Plus size={18} />
-                            Submit a Link
+                            {t('whitepaper.button.submitLink')}
                         </button>
                     )}
                 </div>
@@ -446,6 +476,8 @@ export const Whitepapers = () => {
                                 external_url={wp.external_url}
                                 source={wp.source}
                                 author_name={wp.author_name}
+                                author_linkedin_url={wp.author_linkedin_url}
+                                author_badge={authorBadges[wp.author_id] ?? null}
                                 article_author_handle={wp.article_author_handle}
                                 is_own_article={wp.is_own_article}
                                 created_at={wp.created_at}

@@ -87,6 +87,18 @@ export const Submit = () => {
   const set = (field: keyof FormData, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }));
 
+  // Seed community links from the user's profile on mount
+  useEffect(() => {
+    if (!user) return;
+    setForm(prev => ({
+      ...prev,
+      slackUrl: (user.user_metadata?.social_slack as string | undefined) ?? '',
+      whatsappUrl: (user.user_metadata?.social_whatsapp as string | undefined) ?? '',
+      telegramUrl: (user.user_metadata?.social_telegram as string | undefined) ?? '',
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -176,7 +188,8 @@ export const Submit = () => {
 
     // Insert app record
     const slug = form.appName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const communityLinks = [
+    // Snapshot community links from user_metadata at submit time (fallback when profiles table absent)
+    const communityLinksSnapshot = [
       form.slackUrl && { platform: 'slack', url: form.slackUrl },
       form.whatsappUrl && { platform: 'whatsapp', url: form.whatsappUrl },
       form.telegramUrl && { platform: 'telegram', url: form.telegramUrl },
@@ -193,7 +206,7 @@ export const Submit = () => {
       thumbnail_url: thumbnailUrl,
       tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
       tech_stack: form.techStack.split(',').map(t => t.trim()).filter(Boolean),
-      community_links: communityLinks.length > 0 ? communityLinks : null,
+      community_links: communityLinksSnapshot.length > 0 ? communityLinksSnapshot : null,
       author_id: user.id,
       author_name: user.user_metadata?.full_name ?? user.email ?? 'Anonymous',
     });
@@ -391,15 +404,22 @@ export const Submit = () => {
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginTop: 'var(--space-6)', marginBottom: 'var(--space-4)' }}>
                 <strong>{t('submit.section.community')}</strong>
               </p>
-              <Field label={t('submit.field.slackUrl')} hint={t('submit.field.slackUrlHint')}>
-                <input id="submit-slack-url" type="url" className={styles.input} placeholder="https://join.slack.com/t/workspace/shared_invite/..." value={form.slackUrl} onChange={e => set('slackUrl', e.target.value)} />
-              </Field>
-              <Field label={t('submit.field.whatsappUrl')} hint={t('submit.field.whatsappUrlHint')}>
-                <input id="submit-whatsapp-url" type="url" className={styles.input} placeholder="https://chat.whatsapp.com/..." value={form.whatsappUrl} onChange={e => set('whatsappUrl', e.target.value)} />
-              </Field>
-              <Field label={t('submit.field.telegramUrl')} hint={t('submit.field.telegramUrlHint')}>
-                <input id="submit-telegram-url" type="url" className={styles.input} placeholder="https://t.me/..." value={form.telegramUrl} onChange={e => set('telegramUrl', e.target.value)} />
-              </Field>
+              <div className={styles.infoBox} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
+                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+                  Community invite links (Slack, WhatsApp, Telegram) are pulled from your{' '}
+                  <a href="/profile" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-secondary)' }}>profile</a>.
+                  Update them there and they will apply to all your apps.
+                </p>
+                {(form.slackUrl || form.whatsappUrl || form.telegramUrl) ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', width: '100%' }}>
+                    {form.slackUrl && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>🔵 Slack: {form.slackUrl}</span>}
+                    {form.whatsappUrl && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>🟢 WhatsApp: {form.whatsappUrl}</span>}
+                    {form.telegramUrl && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>🔷 Telegram: {form.telegramUrl}</span>}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>No community links set on your profile yet.</span>
+                )}
+              </div>
               <div className={styles.infoBox}>
                 <Info size={15} color="var(--accent-base)" style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>

@@ -109,6 +109,14 @@ ALTER TABLE public.whitepapers
   ALTER COLUMN external_url DROP DEFAULT;
 -- ============================================================
 
+-- ============================================================
+-- MIGRATION: whitepapers — add author LinkedIn URL column
+-- Run in: Supabase Dashboard → SQL Editor
+-- ============================================================
+ALTER TABLE public.whitepapers
+  ADD COLUMN IF NOT EXISTS author_linkedin_url TEXT DEFAULT NULL;
+-- ============================================================
+
 -- 5. Geo metadata is stored in auth.users.raw_user_meta_data (Supabase user_metadata).
 -- The following fields are set during registration when the user grants location permission:
 --   geo_city          TEXT    — e.g. "San Francisco"
@@ -123,3 +131,29 @@ ALTER TABLE public.whitepapers
 -- SELECT id, raw_user_meta_data->>'geo_city' AS city,
 --        raw_user_meta_data->>'geo_country_code' AS country_code
 -- FROM auth.users;
+
+-- ============================================================
+-- MIGRATION: public profiles table for community links
+-- Stores Slack / WhatsApp / Telegram invite URLs per creator.
+-- These are displayed on app cards instead of being stored per-app.
+-- Run in: Supabase Dashboard → SQL Editor
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.profiles (
+  user_id      UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  slack_url    TEXT DEFAULT NULL,
+  whatsapp_url TEXT DEFAULT NULL,
+  telegram_url TEXT DEFAULT NULL,
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "profiles_select_all"  ON public.profiles FOR SELECT USING (TRUE);
+CREATE POLICY "profiles_insert_own"  ON public.profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "profiles_update_own"  ON public.profiles FOR UPDATE USING (auth.uid() = user_id);
+
+-- Required: grant table-level access to Supabase roles
+-- (RLS policies alone are not enough when table is created via raw SQL)
+GRANT SELECT ON public.profiles TO anon, authenticated;
+GRANT INSERT, UPDATE ON public.profiles TO authenticated;
+-- ============================================================

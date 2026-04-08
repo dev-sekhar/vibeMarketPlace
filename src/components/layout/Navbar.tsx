@@ -19,14 +19,17 @@ export const Navbar = () => {
   const { user, signOut, loading, sessionTimeLeft, isSessionExpiring } = useVibeAuth();
   const { t, i18n } = useTranslation();
   const [appCount, setAppCount] = useState<number>(0);
+  const [userPaperCount, setUserPaperCount] = useState<number>(0);
 
   useEffect(() => {
-    if (!user) { setAppCount(0); return; }
-    supabase
-      .from('apps')
-      .select('id', { count: 'exact', head: true })
-      .eq('author_id', user.id)
-      .then(({ count }) => setAppCount(count ?? 0));
+    if (!user) { setAppCount(0); setUserPaperCount(0); return; }
+    Promise.all([
+      supabase.from('apps').select('id', { count: 'exact', head: true }).eq('author_id', user.id),
+      supabase.from('whitepapers').select('id', { count: 'exact', head: true }).eq('author_id', user.id),
+    ]).then(([{ count: ac }, { count: pc }]) => {
+      setAppCount(ac ?? 0);
+      setUserPaperCount(pc ?? 0);
+    });
   }, [user?.id]);
 
   const [globalStats, setGlobalStats] = useState({ apps: 0, creators: 0, upvotes: 0, categories: 0, papers: 0 });
@@ -58,7 +61,7 @@ export const Navbar = () => {
     return () => window.removeEventListener('openvibes:upvote', handler);
   }, []);
 
-  const badge = getBadge(appCount);
+  const badge = getBadge(appCount + userPaperCount);
 
   const handleSignOut = async () => {
     await signOut();
@@ -98,10 +101,6 @@ export const Navbar = () => {
           <span><strong>{globalStats.papers}</strong>&thinsp;{t('stats.papers')}</span>
           <span style={{ opacity: 0.35 }}>·</span>
           <span><strong>{globalStats.creators}</strong>&thinsp;{t('stats.creators')}</span>
-          <span style={{ opacity: 0.35 }}>·</span>
-          <span><strong>{fmtCount(globalStats.upvotes)}</strong>&thinsp;{t('stats.totalUpvotes')}</span>
-          <span style={{ opacity: 0.35 }}>·</span>
-          <span><strong>{globalStats.categories}</strong>&thinsp;{t('stats.categories')}</span>
         </div>
       </div>
 

@@ -264,3 +264,30 @@
   color: var(--text-secondary);
   font-weight: 500;
 }
+
+/* ---- Community links ---- */
+.communityLinks {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.communityIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid;
+  text-decoration: none;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.communityIcon:hover {
+  transform: scale(1.15);
+  opacity: 0.9;
+}

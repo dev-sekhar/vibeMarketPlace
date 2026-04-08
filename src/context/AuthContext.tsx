@@ -147,7 +147,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const { error } = await supabase.auth.updateUser({ data: updatedMeta });
-    return error?.message ?? null;
+    if (error) return error.message;
+
+    // Upsert community invite links to public.profiles so they can be read
+    // for any author without auth.users access.
+    if (user) {
+      const upsertPayload = {
+        user_id: user.id,
+        slack_url: socialLinks['slack'] || null,
+        whatsapp_url: socialLinks['whatsapp'] || null,
+        telegram_url: socialLinks['telegram'] || null,
+        updated_at: new Date().toISOString(),
+      };
+      console.log('[AuthContext] upsert payload:', upsertPayload);
+      const { error: upsertError } = await supabase.from('profiles').upsert(upsertPayload, { onConflict: 'user_id' });
+      if (upsertError) {
+        console.error('[AuthContext] profiles upsert FAILED:', upsertError.message, upsertError.code, upsertError.details);
+      } else {
+        console.log('[AuthContext] profiles upsert SUCCESS');
+      }
+    }
+
+    return null;
   };
 
   return (

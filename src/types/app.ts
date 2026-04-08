@@ -6,6 +6,7 @@ export interface CommunityLink {
 
 export interface VibeApp {
   id: string;
+  author_id: string;
   name: string;
   slug: string;
   shortDescription: string;

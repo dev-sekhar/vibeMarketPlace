@@ -1,91 +1,164 @@
-# Vibe-Coded Tools & Apps Marketplace
+# OpenVibes — Vibe-Coded Apps Marketplace
 **Requirement Specification & Implementation Guide**
+*Last updated: April 2026 — reflects current build state*
+
+---
 
 ## 1. Overview & Vision
-The goal is to build an open-source, ultra-modern, premium directory and marketplace where creators can showcase, discover, and share applications built primarily via AI agents ("vibe coding"). 
+
+OpenVibes is an open-source, community-led directory and marketplace where creators showcase, discover, and share applications built primarily via AI-assisted coding ("vibe coding"). It also hosts a curated research library of articles and whitepapers on vibe-coding methodology.
 
 **The "Web 2.5" Approach:**
-To maximize open-source adoption while supporting creators, the platform will utilize a Web 2.5 architecture. The core application will run purely on Web2 infrastructure (React, JSON/Supabase, GitHub SSO) for blazing-fast performance and zero-friction onboarding. However, we will sprinkle in optional Web3 features—specifically the ability to connect a crypto wallet to tip/donate to creators directly.
+The core application runs on Web2 infrastructure (React + Supabase + GitHub OAuth) for blazing-fast performance and zero-friction onboarding. Optional Web3 features (creator tipping via crypto wallet) are planned for a future phase.
 
-The platform must feel state-of-the-art and "alive." It needs to prioritize exceptional visual aesthetics, smooth micro-interactions, accessibility, and an intuitive user experience that reflects the bleeding-edge nature of AI-generated software.
+The platform must feel state-of-the-art and "alive" — exceptional visual aesthetics, smooth micro-interactions, accessibility, and an intuitive UX that reflects the bleeding-edge nature of AI-generated software.
 
-## 2. Core Features (Initial Version / MVP)
+---
 
-### A. Landing & Discovery Page
-*   **Hero Section**: A high-impact hero banner with a bold headline, a dynamic sub-headline, and an eye-catching call-to-action (CTA) to "Submit an App" or "Start Exploring."
-*   **Search & Filtering**: A prominent, fast search bar with pill-shaped filter tags (e.g., `Web Apps`, `CLI Tools`, `Productivity`, `Games`).
-*   **App Grid Layout**: A dense, responsive grid showcasing individual applications. **Layout must maximize screen real estate** (minimal margins) so users can see as many apps as possible at a glance.
-    *   **App Cards**: Must include a high-quality thumbnail, app name, short description, author/creator, technology tags, and an "Upvote" button. 
-    *   *Interaction*: Cards should have subtle scale and glow effects on hover.
+## 2. Feature Status
 
-### B. Social & Quality Control
-*   **Follow Creators**: Users can follow specific users to get notified of their latest drops.
-*   **Creator Tipping (Web 2.5)**: Users can optionally connect a crypto wallet to donate directly to the creators of their favorite tools.
-*   **Curation & App Approval Engine (Post-Moderation Model)**:
-    *   *Frictionless Publishing*: To keep the platform exciting and avoid bottlenecks, apps go live immediately upon submission into a "New & Trending" feed.
-    *   *Automated Harmful Content Screening*: Background API tasks instantly scan submitted URLs and descriptions to automatically hide/flag malicious scripts, malware, NSFW, or harmful content.
-    *   *Community Vetting & Reporting*: Rely on the community to upvote good apps and report broken/harmful ones.
-    *   *The "Admin Verified" Tier*: Manual curation is reserved *only* for granting "Verified" badges and promoting top-tier apps to the main "Featured Hero" section.
+### ✅ A. Landing & Discovery Page
+- **Hero Section**: High-impact banner with bold headline, sub-headline, and CTAs ("Submit Your App", "Explore Apps").
+- **Search & Filtering**: Prominent search bar with pill-shaped category filter tags (`Web App`, `CLI Tool`, `Productivity`, `Game`, `Developer Tool`, `Finance`, `AI Assistant`).
+- **App Grid Layout**: Responsive grid maximising screen real estate. Caps at `HOME_APPS_LIMIT` with a "Show all" toggle. Homepage also shows a horizontal **Featured Spotlight** for admin-curated apps and a **Latest Research** row.
+- **App Cards** (`<AppCard />`): Thumbnail with hover scale + brightness effect, overlay quick-actions (Live Demo, Source Code), category badge, upvote button (duplicate-proof, persisted via `upvotes` table), author name, short description, tech stack tags.
+- **Live Navbar Stats**: App count, paper/article count, creator count, total upvotes, category count — updated in real time on upvote.
 
-### C. App Detail & Community View
-*   **Expanded Details**: Larger screenshots/carousels of the app.
-*   **Information Sections**: "What it does", "How to use it", and "Tech Stack Used".
-*   **Actionable Links**: Direct links to the Live Demo and the Source Code (GitHub).
-*   **Developer Templates**: Provide downloadable boilerplate templates (e.g., standard `.gitignore`, `README.md` layouts, repo structures) for users who want to clone or build off the listed app.
-*   **Discussions & Chat Integrations**: Links or embedded widgets for Slack, Telegram, or WhatsApp channels specific to that app, fostering a community of vibe-coders.
-*   **Social Sharing (LinkedIn)**: A prominent "Share to LinkedIn" button to allow creators to immediately announce their listed app to their professional network.
-*   **Research & Whitepapers**: A dedicated section under the app (or globally) where users can publish Markdown/PDF whitepapers detailing their advanced prompting architectures or custom vibe-coding methodologies.
+### ✅ B. App Detail & Community View
+- **Detail page** at `/app/:slug` with full thumbnail, long description, tech stack tags, category, author, publish date.
+- **"What it does" / "How to use it" / "Tech Stack"** information sections.
+- **Live Demo + Source Code** action buttons (Live Demo conditionally hidden if no `app_url`).
+- **Social Sharing**: "Share to LinkedIn" button opens a pre-composed LinkedIn share intent.
+- **Research & Whitepapers**: Global `/whitepapers` page (see §E).
 
-### D. User Accounts & App Submission Portal
-*   **Authentication (SSO)**: Frictionless login using Google or GitHub Single Sign-On (SSO) to keep the barrier to entry extremely low.
-*   **Upload Form**: A clean, step-by-step form for creators to submit their vibe-coded tools.
-*   **Fields**: App Name, Category, Repository URL, App URL, Short Description, Long Description, and Upload Thumbnails.
+### ✅ C. User Accounts, Profiles & Trust System
+- **Authentication**: GitHub OAuth via Supabase Auth. Email/password registration also supported. Google SSO available in `AuthContext` but not yet surfaced in the login UI.
+- **Onboarding Modal**: On first login, users are prompted to set their full name and social profile links before proceeding.
+- **Profile Page** (`/profile`): Edit full name; add/update social links (LinkedIn, Medium, GitHub — driven by `config/socialLinks.json`). Social link changes trigger a **24-hour article-submission cooldown** to prevent abuse.
+- **Creator Badges**: Gamified badge tiers displayed in the Navbar next to the user's name, earned by submitting apps:
+  | Badge | Tier | Requirement |
+  |---|---|---|
+  | 🥉 Newcomer | newcomer | 1+ apps |
+  | 🥈 Builder | builder | 3+ apps |
+  | 🥇 Maker | maker | 5+ apps |
+  | 💎 Vibe Champion | champion | 10+ apps |
+  | 🌟 Vibe Legend | legend | 20+ apps |
+- **Session Management**: `AuthContext` exposes `sessionTimeLeft` + `isSessionExpiring`. Navbar shows a countdown at < 5 minutes remaining; auto-signs out at expiry.
 
-### E. Internationalization (i18n)
-*   **Multi-language Support**: Provide translations for the core UI (navigation, search placeholders, submission forms) to support a global open-source community.
-*   **Language Toggler**: A simple dropdown in the NavBar or Footer letting users switch between default locales (e.g., English, Spanish, Mandarin).
+### ✅ D. App Submission Portal
+- **Submit App** form at `/submit` (authenticated only).
+- **Fields**: App Name, Category, Repository URL, App URL (Live Demo), Short Description, Long Description, Thumbnail upload (Supabase Storage `thumbnails` bucket).
+- **Post-moderation model**: Apps go live immediately on submit.
+- **Featured tier**: `featured` boolean column — set manually by admins to promote apps to the Featured Spotlight on the home page.
 
-## 3. Technology Stack & Architecture
-*(A classic **3-Tier Architecture** optimized for rapid vibe-coding with Antigravity and a **small app footprint**)*
+### ✅ E. Research & Whitepapers
+- **Global `/whitepapers` page**: Browse + submit externally-published articles and research.
+- **Supported platforms**: LinkedIn, Medium, GitHub (configured via `config/socialLinks.json`; additional platforms can be unlocked by setting `enabled: true`).
+- **Submission gates** (3 layers of validation):
+  1. User must have submitted ≥ 1 vibe-coded app (proves they are a builder).
+  2. 24-hour cooldown after any social link change (prevents impersonation via profile-swap).
+  3. When claiming authorship (`isOwnArticle: true`), the author handle extracted from the article URL must match the handle in the user's stored profile URL for that platform — auto-matched, no manual input.
+- **Article card** (`<PaperCard />`): Platform badge, title, description, "Read more →" link, author row.
 
-*   **Presentation Tier (Frontend)**: Vite + React utilizing **TypeScript**. *(Why TS? TypeScript is vastly superior to pure JS for scalable component architectures. It catches errors at compile-time and provides auto-completion, which speeds up vibe-coding immensely).* Keeps the footprint minimal.
-    *   *Component-Driven UI*: Strictly build using isolated, reusable UI components (e.g., `<AppCard />`, `<GlassButton />`) to guarantee a consistent visual system and rapid prototyping.
-*   **Logic Tier (Auth, Services & APIs)**: 
-    *   *Reusable Service Modules*: Abstract all logic (Auth, API fetching) into strictly typed React Hooks (e.g., `useVibeAuth()`) or TS scripts.
-    *   *Serverless Backend (Node.js/TS vs Python)*: Handled by a BaaS (like Supabase Edge Functions). **Recommendation**: Use TypeScript/Node.js to maintain language continuity across the stack (reducing footprint). Only use Python here if complex server-side Machine Learning/LLM generation is required.
-*   **Data Tier (Database)**: PostgreSQL (via Supabase) or NoSQL (via Firebase) to store profiles, metadata, and whitepapers.
-*   **Styling**: Vanilla CSS utilizing CSS Variables to maintain strict design system control without the bloat of generic utility-class packages.
-*   **State Management**: Native React State/Context.
-*   **Internationalization (i18n)**: `react-i18next` for managing translation JSON files and seamlessly switching language context without heavy page reloads.
-*   **Icons**: Lucide Icons or Phosphor Icons for a clean, consistent look. *(Why not MUI? MUI is heavy and brings Material Design opinions. Lucide/Phosphor are SVG-based, significantly smaller in bundle size, and provide a neutral "vibe" that pairs better with custom glassmorphic designs).*
+### ✅ F. Developer Templates
+- `/templates` page: Downloadable boilerplate files (`.gitignore`, `README.md`, `LICENSE`, `CONTRIBUTING.md`, `.env` example, repo structure guides).
+- Searchable by keyword and filterable by category.
 
-## 4. Design Aesthetics & Accessibility (Non-Negotiable)
-To achieve the requirement of a "Wow" factor while ensuring the marketplace is usable by everyone:
-*   **Accessibility (A11y)**: Must include semantic HTML tags, ARIA labels (especially for icon-only buttons), keyboard navigability, and sufficient color contrast even within Neon/Dark palettes.
-*   **Theme**: Default to a deep, polished Dark Mode (e.g., surface colors around `#0F0F13`).
-*   **Accents**: Use vibrant, neon-adjacent gradients (e.g., Electric Blue to Purple) sparingly for primary buttons and hover states.
-*   **Glassmorphism**: Utilize backdrop-filters (`blur`) on the Navigation Bar and overlay modals to create a sense of depth.
-*   **Typography**: Use modern, geometric sans-serif fonts such as *Inter*, *Outfit*, or *Plus Jakarta Sans*. Sharp contrast in font sizes between headers and body text.
-*   **Motion**: 
-    *   Page transitions.
-    *   Buttons should press down smoothly (`transform: scale(0.98)`).
-    *   Images should load with a fade-in effect.
+### ✅ G. Internationalisation (i18n)
+- Full translation coverage across **English, Spanish (es), and Mandarin Chinese (zh)**.
+- All keys managed inline in `src/i18n/i18n.ts` (no external JSON files).
+- Language cycle button in Navbar (EN → ES → ZH → EN).
 
-## 5. Step-by-Step "Vibe Coding" Plan
-*Use this sequential plan when instructing Antigravity to build the app.*
+---
 
-1.  **Phase 1: Foundation & Design Tokens**
-    *   Initialize the project (e.g., `yarn create vite`). *(Note: using yarn as per user preferences)*
-    *   Establish `index.css` with a comprehensive set of CSS variables for colors, spacing, and typography.
-2.  **Phase 2: The Shell**
-    *   Build the persistent Layout component: Global responsive Navbar (glassmorphic) and Footer.
-3.  **Phase 3: The Data & Components**
-    *   Create a mock dataset of 5-6 fake apps.
-    *   Build the `AppCard` component focusing intensely on hover states and image fitting.
-4.  **Phase 4: Landing Page Assembly**
-    *   Build the Hero Section.
-    *   Implement the Grid to render the `AppCard` items dynamically.
-5.  **Phase 5: Details & Routing**
-    *   Setup routing.
-    *   Build out the layout for the individual App Detail page.
-    *   *(Optional)* Implement the Submission Form UI.
+## 3. Not Yet Built (Planned)
+
+### 🔲 Follow Creators
+- `follows` table (`follower_id`, `followee_id`, `created_at`).
+- "Follow" button on AppDetail and public user profile pages.
+- Follower/following counts on profile.
+- Email notification (Supabase Edge Function + SendGrid/Resend) when a followed creator submits a new app.
+
+### 🔲 Public User Profile Pages (`/user/:username`)
+- Display user's submitted apps, badge, follower/following counts, and bio.
+- `AppCard` author name links to this page.
+- *(Note: `/profile` — the self-edit page — is built. Public profile pages are separate.)*
+
+### 🔲 Creator Tipping (Web 2.5)
+- Optional crypto wallet connection for direct creator donations.
+- No blocking dependency on this for core functionality.
+
+### 🔲 Automated Harmful Content Screening
+- Background task on submission to scan URLs and descriptions for malware/NSFW/harmful content.
+- Until built: rely on community reporting and manual admin moderation.
+
+### 🔲 App Detail — Screenshot Carousel
+- Spec calls for multiple screenshots; currently only a single thumbnail is supported.
+- DB schema has room for this (`thumbnail_url` is a single field — needs extending to `thumbnails TEXT[]`).
+
+### 🔲 Community Links / Chat Integrations
+- `community_links JSONB` column exists in the `apps` table — not yet surfaced in the UI.
+- Planned: display Slack/Telegram/Discord/WhatsApp links on the App Detail page.
+
+### 🔲 Google SSO
+- `signInWithGoogle()` is implemented in `AuthContext` but not surfaced in the Login UI.
+- Only GitHub OAuth is visible to users today.
+
+---
+
+## 4. Technology Stack & Architecture
+
+| Layer | Choice | Notes |
+|---|---|---|
+| Frontend | React 19 + TypeScript + Vite 5 | Strict TS throughout; CSS Modules |
+| Routing | React Router v7 | Client-side SPA routing |
+| Auth / BaaS | Supabase (PostgreSQL + Auth + Storage) | RLS on all tables; GitHub OAuth |
+| Styling | Vanilla CSS + CSS Variables | No utility-class framework; `index.css` design tokens |
+| State | React Context (`AuthContext`) + component `useState` | No external state library |
+| i18n | `react-i18next` (inline resources) | EN / ES / ZH |
+| Icons | Lucide React | SVG icon set; no MUI |
+| Rich text | Tiptap | Used in Whitepapers editor |
+| Config | `config/socialLinks.json` | Toggles which social platforms are enabled |
+
+**Key architectural decisions:**
+- `useVibeAuth()` — typed hook wrapping the full Supabase Auth lifecycle including session timers, profile updates, and social link cooldown logic.
+- Upvoting is recorded in a dedicated `upvotes(app_id, user_id)` table with a `UNIQUE` constraint (duplicate-proof). A `SECURITY DEFINER` trigger auto-syncs `apps.upvotes`.
+- Social link management lives in Supabase `user_metadata` (`social_linkedin`, `social_medium`, `social_github`, `social_links_updated_at`).
+
+---
+
+## 5. Design Aesthetics & Accessibility
+
+- **Theme**: Deep polished Dark Mode — surface colors `~#0F0F13`.
+- **Accents**: Neon gradients (Electric Blue → Purple) for primary CTAs and glow effects.
+- **Glassmorphism**: `backdrop-filter: blur` on Navbar, modals, and glass-panel cards.
+- **Typography**: Inter / geometric sans-serif; sharp size contrast between headings and body.
+- **Motion**: Card hover scale + glow, button `transform: scale(0.98)` press, image fade-in.
+- **Accessibility**: Semantic HTML, ARIA labels on icon-only buttons, sufficient contrast in neon palette, keyboard-navigable forms.
+
+---
+
+## 6. Build Phases — Status
+
+| Phase | Description | Status |
+|---|---|---|
+| 1 | Foundation & Design Tokens (`index.css` CSS variables) | ✅ Complete |
+| 2 | Shell — Navbar (glassmorphic + live stats + badge) + Footer + Layout | ✅ Complete |
+| 3 | Data & Components — `AppCard`, `PaperCard`, mock data | ✅ Complete |
+| 4 | Landing Page — Hero, search/filter, app grid, featured spotlight | ✅ Complete |
+| 5 | Routing + App Detail page | ✅ Complete |
+| 6 | Auth — GitHub OAuth, email/password, session timer, onboarding | ✅ Complete |
+| 7 | Submit App form + Supabase persistence | ✅ Complete |
+| 8 | Whitepapers page + article submission gates | ✅ Complete |
+| 9 | Profile page + social links + cooldown | ✅ Complete |
+| 10 | Developer Templates page | ✅ Complete |
+| 11 | Creator badge system (Navbar) | ✅ Complete |
+| 12 | i18n — full EN / ES / ZH coverage | ✅ Complete |
+| 13 | Rebrand to OpenVibes | ✅ Complete |
+| — | Follow Creators | 🔲 Planned |
+| — | Public user profile pages (`/user/:username`) | 🔲 Planned |
+| — | Screenshot carousel on App Detail | 🔲 Planned |
+| — | Community links / chat integrations on App Detail | 🔲 Planned |
+| — | Automated harmful content screening | 🔲 Planned |
+| — | Creator tipping (Web 2.5 / crypto wallet) | 🔲 Planned |
+| — | Google SSO surfaced in Login UI | 🔲 Planned |

@@ -4,6 +4,7 @@
         "label": "LinkedIn",
         "placeholder": "https://linkedin.com/in/username",
         "icon": "linkedin",
+        "type": "social",
         "enabled": true
     },
     {
@@ -11,6 +12,7 @@
         "label": "Medium",
         "placeholder": "https://medium.com/@username",
         "icon": "medium",
+        "type": "social",
         "enabled": true
     },
     {
@@ -18,6 +20,7 @@
         "label": "GitHub",
         "placeholder": "https://github.com/username",
         "icon": "github",
+        "type": "social",
         "enabled": true
     },
     {
@@ -25,6 +28,7 @@
         "label": "X (Twitter)",
         "placeholder": "https://x.com/username",
         "icon": "twitter",
+        "type": "social",
         "enabled": false
     },
     {
@@ -32,6 +36,7 @@
         "label": "Dev.to",
         "placeholder": "https://dev.to/username",
         "icon": "devto",
+        "type": "social",
         "enabled": false
     },
     {
@@ -39,6 +44,31 @@
         "label": "Hashnode",
         "placeholder": "https://hashnode.com/@username",
         "icon": "hashnode",
+        "type": "social",
         "enabled": false
+    },
+    {
+        "id": "slack",
+        "label": "Slack",
+        "placeholder": "https://join.slack.com/t/workspace/shared_invite/...",
+        "icon": "slack",
+        "type": "community",
+        "enabled": true
+    },
+    {
+        "id": "whatsapp",
+        "label": "WhatsApp",
+        "placeholder": "https://chat.whatsapp.com/...",
+        "icon": "whatsapp",
+        "type": "community",
+        "enabled": true
+    },
+    {
+        "id": "telegram",
+        "label": "Telegram",
+        "placeholder": "https://t.me/...",
+        "icon": "telegram",
+        "type": "community",
+        "enabled": true
     }
 ]

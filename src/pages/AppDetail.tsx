@@ -38,8 +38,22 @@ export const AppDetail = () => {
         console.error('Failed to fetch app:', error);
         setApp(null);
       } else if (data) {
+        // Fetch community links from public.profiles; fall back to per-app column if table absent
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('slack_url, whatsapp_url, telegram_url')
+          .eq('user_id', data.author_id)
+          .maybeSingle();
+        const communityLinks: { platform: 'slack' | 'whatsapp' | 'telegram'; url: string }[] = (!profileError && profile)
+          ? [
+              profile.slack_url && { platform: 'slack' as const, url: profile.slack_url },
+              profile.whatsapp_url && { platform: 'whatsapp' as const, url: profile.whatsapp_url },
+              profile.telegram_url && { platform: 'telegram' as const, url: profile.telegram_url },
+            ].filter(Boolean) as { platform: 'slack' | 'whatsapp' | 'telegram'; url: string }[]
+          : (data.community_links ?? []);
         const mapped: VibeApp = {
           id: data.id,
+          author_id: data.author_id,
           name: data.name,
           slug: data.slug,
           shortDescription: data.short_description,
@@ -48,7 +62,7 @@ export const AppDetail = () => {
           category: data.category as VibeApp['category'],
           tags: data.tags || [],
           techStack: data.tech_stack || [],
-          communityLinks: data.community_links || [],
+          communityLinks,
           author: {
             name: data.author_name || 'Unknown',
             avatarInitials: (data.author_name || 'U').split(' ').map((p: string) => p[0]).join('').toUpperCase().slice(0, 2),

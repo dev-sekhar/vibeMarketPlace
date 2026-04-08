@@ -48,6 +48,7 @@ export const Home = () => {
         } else if (data) {
           const transformedApps: VibeApp[] = data.map(app => ({
             id: app.id,
+            author_id: app.author_id,
             name: app.name,
             slug: app.slug,
             shortDescription: app.short_description,
@@ -56,6 +57,7 @@ export const Home = () => {
             category: app.category as AppCategory,
             tags: app.tags || [],
             techStack: app.tech_stack || [],
+            communityLinks: app.community_links ?? [],
             author: {
               name: app.author_name,
               avatarInitials: app.author_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
