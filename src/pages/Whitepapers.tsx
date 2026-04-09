@@ -6,6 +6,7 @@ import { useVibeAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { PaperCard } from '../components/PaperCard/PaperCard';
 import { getBadge, type Badge } from '../lib/badge';
+import { sanitizeUrl } from '../lib/utils';
 import socialLinksConfig from '../../config/socialLinks.json';
 import styles from './Submit.module.css';
 
@@ -35,7 +36,12 @@ const SOURCES = ['Medium', 'LinkedIn', 'Dev.to', 'Substack', 'Hashnode', 'GitHub
 
 const EMPTY_FORM: FormData = { title: '', description: '', url: '', source: 'Medium', isOwnArticle: false };
 
-const isValidUrl = (s: string) => { try { return Boolean(new URL(s)); } catch { return false; } };
+const isValidUrl = (s: string) => {
+    try {
+        const { protocol } = new URL(s);
+        return protocol === 'http:' || protocol === 'https:';
+    } catch { return false; }
+};
 
 /** Detect the publishing platform from a URL. */
 const detectPlatform = (url: string): string => {
@@ -481,7 +487,7 @@ export const Whitepapers = () => {
                                 article_author_handle={wp.article_author_handle}
                                 is_own_article={wp.is_own_article}
                                 created_at={wp.created_at}
-                                onClick={() => window.open(wp.external_url, '_blank', 'noopener,noreferrer')}
+                                onClick={() => window.open(sanitizeUrl(wp.external_url), '_blank', 'noopener,noreferrer')}
                             />
                         ))}
                     </div>

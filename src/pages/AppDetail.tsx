@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useTranslation } from 'react-i18next';
 import { CommunityLinks } from '../components/CommunityLinks';
 import type { VibeApp } from '../types/app';
+import { sanitizeUrl } from '../lib/utils';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Developer Tool': '#3b82f6',
@@ -229,7 +230,7 @@ export const AppDetail = () => {
           {/* Action Buttons */}
           {app.demoUrl && (
             <a
-              href={app.demoUrl}
+              href={sanitizeUrl(app.demoUrl)}
               target="_blank"
               rel="noopener noreferrer"
               id={`detail-demo-${app.id}`}
@@ -246,7 +247,7 @@ export const AppDetail = () => {
             </a>
           )}
           <a
-            href={app.repoUrl}
+            href={sanitizeUrl(app.repoUrl)}
             target="_blank"
             rel="noopener noreferrer"
             id={`detail-source-${app.id}`}

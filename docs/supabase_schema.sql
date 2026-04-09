@@ -157,3 +157,46 @@ CREATE POLICY "profiles_update_own"  ON public.profiles FOR UPDATE USING (auth.u
 GRANT SELECT ON public.profiles TO anon, authenticated;
 GRANT INSERT, UPDATE ON public.profiles TO authenticated;
 -- ============================================================
+
+-- ============================================================
+-- SECURITY MIGRATION 1: Protect upvotes and featured from direct manipulation
+-- Without this, an app author can call .update({ upvotes: 9999 }) via the API
+-- and the "Authors can update their own apps" RLS policy would allow it.
+-- This trigger resets those fields to their existing values whenever a JWT
+-- session is active (i.e. a real user request), while still allowing the
+-- sync_upvote_count trigger to update via SECURITY DEFINER context.
+-- Run in: Supabase Dashboard → SQL Editor
+-- ============================================================
+CREATE OR REPLACE FUNCTION protect_app_computed_fields()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  -- auth.uid() is non-NULL only for JWT-authenticated user requests.
+  -- Trigger-to-trigger updates (e.g. sync_upvote_count) run with auth.uid() = NULL.
+  IF auth.uid() IS NOT NULL THEN
+    NEW.upvotes := OLD.upvotes;
+    NEW.featured := OLD.featured;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER guard_app_computed_fields
+BEFORE UPDATE ON public.apps
+FOR EACH ROW EXECUTE FUNCTION protect_app_computed_fields();
+-- ============================================================
+
+-- ============================================================
+-- SECURITY MIGRATION 2: Restrict thumbnail uploads to user's own folder
+-- The original policy allowed any authenticated user to upload to any path.
+-- This restricts uploads to /<user_id>/* only.
+-- Run in: Supabase Dashboard → SQL Editor
+-- ============================================================
+DROP POLICY IF EXISTS "Authenticated users can upload thumbnails" ON storage.objects;
+
+CREATE POLICY "Users can upload own thumbnails" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'thumbnails'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+-- ============================================================

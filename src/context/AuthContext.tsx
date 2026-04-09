@@ -159,12 +159,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         telegram_url: socialLinks['telegram'] || null,
         updated_at: new Date().toISOString(),
       };
-      console.log('[AuthContext] upsert payload:', upsertPayload);
       const { error: upsertError } = await supabase.from('profiles').upsert(upsertPayload, { onConflict: 'user_id' });
       if (upsertError) {
-        console.error('[AuthContext] profiles upsert FAILED:', upsertError.message, upsertError.code, upsertError.details);
-      } else {
-        console.log('[AuthContext] profiles upsert SUCCESS');
+        console.error('[VibeMarket] profiles upsert failed:', upsertError.code);
       }
     }
 

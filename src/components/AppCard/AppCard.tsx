@@ -4,6 +4,7 @@ import { ArrowUp, ExternalLink, Code2, Tag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { VibeApp, CommunityLink } from '../../types/app';
 import { supabase } from '../../lib/supabaseClient';
+import { sanitizeUrl } from '../../lib/utils';
 import styles from './AppCard.module.css';
 
 interface AppCardProps {
@@ -35,33 +36,22 @@ export const AppCard = ({ app, onUpvote, initialUpvoted = false }: AppCardProps)
 
   // Fetch community links live from the author's profile
   useEffect(() => {
-    console.log(`[Profile:1] app="${app.name}" author_id="${app.author_id}"`);
-    if (!app.author_id) {
-      console.log(`[Profile:2] SKIP — no author_id`);
-      return;
-    }
-    console.log(`[Profile:3] Querying profiles table for user_id=${app.author_id}`);
+    if (!app.author_id) return;
     supabase
       .from('profiles')
       .select('slack_url, whatsapp_url, telegram_url')
       .eq('user_id', app.author_id)
       .maybeSingle()
       .then(({ data: profile, error }) => {
-        console.log(`[Profile:4] Raw result:`, { profile, error });
-        if (error) { console.log(`[Profile:5] ERROR:`, error.message, error.code); return; }
-        if (!profile) { console.log(`[Profile:5] No row found for user_id=${app.author_id}`); return; }
+        if (error || !profile) return;
         const links: CommunityLink[] = [
           profile.slack_url && { platform: 'slack' as const, url: profile.slack_url },
           profile.whatsapp_url && { platform: 'whatsapp' as const, url: profile.whatsapp_url },
           profile.telegram_url && { platform: 'telegram' as const, url: profile.telegram_url },
         ].filter(Boolean) as CommunityLink[];
-        console.log(`[Profile:6] Links built:`, links);
         setCommunityLinks(links);
-        console.log(`[Profile:7] setCommunityLinks called with ${links.length} link(s)`);
       });
   }, [app.author_id]);
-
-  console.log(`[AppCard] Rendering ${app.name} with thumbnail: ${app.thumbnail}`);
 
   const handleUpvote = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -80,8 +70,7 @@ export const AppCard = ({ app, onUpvote, initialUpvoted = false }: AppCardProps)
           src={app.thumbnail || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTIxMjE3Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2E2YTZiNyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='}
           alt={`${app.name} screenshot`}
           className={styles.thumbnail}
-          onError={(e) => console.error(`[AppCard] Image failed to load for ${app.name}:`, e.currentTarget.src)}
-          onLoad={() => console.log(`[AppCard] Image loaded successfully for ${app.name}`)}
+
         />
         {app.featured && (
           <span className={styles.featuredBadge}>⚡ Featured</span>
@@ -89,7 +78,7 @@ export const AppCard = ({ app, onUpvote, initialUpvoted = false }: AppCardProps)
         <div className={styles.thumbnailOverlay}>
           {app.demoUrl && (
             <a
-              href={app.demoUrl}
+              href={sanitizeUrl(app.demoUrl)}
               target="_blank"
               rel="noopener noreferrer"
               className={styles.overlayBtn}
@@ -101,7 +90,7 @@ export const AppCard = ({ app, onUpvote, initialUpvoted = false }: AppCardProps)
             </a>
           )}
           <a
-            href={app.repoUrl}
+            href={sanitizeUrl(app.repoUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.overlayBtn}
@@ -182,7 +171,7 @@ export const AppCard = ({ app, onUpvote, initialUpvoted = false }: AppCardProps)
                   return (
                     <a
                       key={link.platform}
-                      href={link.url}
+                      href={sanitizeUrl(link.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={styles.communityIcon}

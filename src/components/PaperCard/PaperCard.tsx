@@ -1,6 +1,7 @@
 import { ExternalLink, User, PenLine, Share2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import styles from './PaperCard.module.css';
+import { sanitizeUrl } from '../../lib/utils';
 
 interface AuthorBadge {
     emoji: string;
@@ -119,9 +120,10 @@ export const PaperCard = ({ title, description, external_url, source, author_nam
     const [previewImg, setPreviewImg] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!external_url) return;
+        const safeUrl = sanitizeUrl(external_url);
+        if (safeUrl === '#') return;
         let cancelled = false;
-        fetch(`https://api.microlink.io?url=${encodeURIComponent(external_url)}`)
+        fetch(`https://api.microlink.io?url=${encodeURIComponent(safeUrl)}`)
             .then(r => {
                 if (!r.ok) return null;
                 return r.json();
@@ -157,7 +159,7 @@ export const PaperCard = ({ title, description, external_url, source, author_nam
                 {/* Platform logo badge — clickable, opens article */}
                 {source && (
                     <a
-                        href={external_url}
+                        href={sanitizeUrl(external_url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={e => e.stopPropagation()}

@@ -1,5 +1,6 @@
 import { Share2, MessageCircle, Send } from 'lucide-react';
 import type { CommunityLink } from '../types/app';
+import { sanitizeUrl } from '../lib/utils';
 
 const PLATFORM_CONFIG: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
     slack: {
