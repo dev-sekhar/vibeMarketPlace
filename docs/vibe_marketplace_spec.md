@@ -21,13 +21,14 @@ The platform must feel state-of-the-art and "alive" — exceptional visual aesth
 - **Hero Section**: High-impact banner with bold headline, sub-headline, and CTAs ("Submit Your App", "Explore Apps").
 - **Search & Filtering**: Prominent search bar with pill-shaped category filter tags (`Web App`, `CLI Tool`, `Productivity`, `Game`, `Developer Tool`, `Finance`, `AI Assistant`).
 - **App Grid Layout**: Responsive grid maximising screen real estate. Caps at `HOME_APPS_LIMIT` with a "Show all" toggle. Homepage also shows a horizontal **Featured Spotlight** for admin-curated apps and a **Latest Research** row.
-- **App Cards** (`<AppCard />`): Thumbnail with hover scale + brightness effect, overlay quick-actions (Live Demo, Source Code), category badge, upvote button (duplicate-proof, persisted via `upvotes` table), author name, short description, tech stack tags.
+- **App Cards** (`<AppCard />`): Thumbnail with hover scale + brightness effect, overlay quick-actions (Live Demo, Source Code), category badge, upvote button (duplicate-proof, persisted via `upvotes` table), author name, short description, tech stack tags, and **live community links** (Slack/WhatsApp/Telegram) fetched from `public.profiles` using the app's `author_id`.
 - **Live Navbar Stats**: App count, paper/article count, creator count, total upvotes, category count — updated in real time on upvote.
 
 ### ✅ B. App Detail & Community View
 - **Detail page** at `/app/:slug` with full thumbnail, long description, tech stack tags, category, author, publish date.
 - **"What it does" / "How to use it" / "Tech Stack"** information sections.
 - **Live Demo + Source Code** action buttons (Live Demo conditionally hidden if no `app_url`).
+- **Community Links section**: Slack, WhatsApp, Telegram invite links fetched live from `public.profiles` for the app's author. Displayed with official brand SVG icons (correct brand colours). Falls back to `community_links` JSONB column if no profile row exists.
 - **Social Sharing**: "Share to LinkedIn" button opens a pre-composed LinkedIn share intent.
 - **Research & Whitepapers**: Global `/whitepapers` page (see §E).
 
@@ -67,7 +68,19 @@ The platform must feel state-of-the-art and "alive" — exceptional visual aesth
 ### ✅ G. Internationalisation (i18n)
 - Full translation coverage across **English, Spanish (es), and Mandarin Chinese (zh)**.
 - All keys managed inline in `src/i18n/i18n.ts` (no external JSON files).
-- Language cycle button in Navbar (EN → ES → ZH → EN).
+- Language cycle button in Navbar (EN → ES → ZH → EN) — always pinned to the **far right** of the navbar so its position is consistent regardless of auth state.
+- i18n keys added in this session: `whitepaper.button.submitLink`, updated `whitepaper.page.subtitle` across all 3 languages.
+
+### ✅ H. Security Hardening
+- **URL sanitization** (`src/lib/utils.ts`): `sanitizeUrl()` helper used on all user-supplied URLs before rendering in `href` or `window.open()`. Only `http:` and `https:` pass — `javascript:`, `data:`, and other schemes return `#`.
+- **Upvote/featured protection** (`SECURITY MIGRATION 1`): A `BEFORE UPDATE` PostgreSQL trigger (`guard_app_computed_fields`) resets `upvotes` and `featured` to their previous values for any JWT-authenticated request, preventing direct API manipulation.
+- **Scoped storage uploads** (`SECURITY MIGRATION 2`): Thumbnail upload policy now restricts each user to `/<user_id>/*` paths only.
+- **No PII in logs**: All debug `console.log` statements printing user IDs, profile payloads, or token data removed from production code.
+
+### ✅ I. App Versioning
+- App version is read from `"version"` in `package.json` at Vite build time and injected as `__APP_VERSION__` compile-time constant.
+- Displayed in the **Footer** below the copyright line (`© 2026 VibeMarket · Open Source`).
+- To release a new version: update `package.json` `"version"` field and redeploy. No other changes required.
 
 ---
 
@@ -97,8 +110,11 @@ The platform must feel state-of-the-art and "alive" — exceptional visual aesth
 - DB schema has room for this (`thumbnail_url` is a single field — needs extending to `thumbnails TEXT[]`).
 
 ### 🔲 Community Links / Chat Integrations
-- `community_links JSONB` column exists in the `apps` table — not yet surfaced in the UI.
-- Planned: display Slack/Telegram/Discord/WhatsApp links on the App Detail page.
+- ✅ `community_links JSONB` column exists in `apps` table and is surfaced on AppCard and AppDetail.
+- ✅ `public.profiles` table stores per-creator `slack_url`, `whatsapp_url`, `telegram_url` with RLS policies and proper GRANTs.
+- ✅ AppCard and AppDetail fetch community links live from `public.profiles` using `author_id`.
+- ✅ Official brand SVG icons for Slack (#E01E5A), WhatsApp (#25D366), Telegram (#0088cc) inline in AppCard.
+- 🔲 Discord support not yet added.
 
 ### 🔲 Google SSO
 - `signInWithGoogle()` is implemented in `AuthContext` but not surfaced in the Login UI.
@@ -155,10 +171,12 @@ The platform must feel state-of-the-art and "alive" — exceptional visual aesth
 | 11 | Creator badge system (Navbar) | ✅ Complete |
 | 12 | i18n — full EN / ES / ZH coverage | ✅ Complete |
 | 13 | Rebrand to OpenVibes | ✅ Complete |
+| 14 | Community links — `public.profiles` table, live fetch in AppCard/AppDetail, brand SVG icons | ✅ Complete |
+| 15 | Security hardening — URL sanitization, upvote/featured trigger, scoped storage upload policy | ✅ Complete |
+| 16 | App versioning — `package.json` → Vite compile-time constant → Footer display | ✅ Complete |
 | — | Follow Creators | 🔲 Planned |
 | — | Public user profile pages (`/user/:username`) | 🔲 Planned |
 | — | Screenshot carousel on App Detail | 🔲 Planned |
-| — | Community links / chat integrations on App Detail | 🔲 Planned |
 | — | Automated harmful content screening | 🔲 Planned |
 | — | Creator tipping (Web 2.5 / crypto wallet) | 🔲 Planned |
 | — | Google SSO surfaced in Login UI | 🔲 Planned |
