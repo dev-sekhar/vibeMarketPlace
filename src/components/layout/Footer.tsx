@@ -27,9 +27,14 @@ export const Footer = () => {
           </p>
         </div>
 
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>
-          © {new Date().getFullYear()} VibeMarket · Open Source
-        </p>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>
+            © {new Date().getFullYear()} VibeMarket · Open Source
+          </p>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', opacity: 0.5, margin: '2px 0 0' }}>
+            v{__APP_VERSION__}
+          </p>
+        </div>
       </div>
     </footer>
   );

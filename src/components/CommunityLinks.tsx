@@ -44,7 +44,7 @@ export const CommunityLinks = ({ links }: CommunityLinksProps) => {
                     return (
                         <a
                             key={`${link.platform}-${link.url}`}
-                            href={link.url}
+                            href={sanitizeUrl(link.url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
