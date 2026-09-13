@@ -1,0 +1,21 @@
+.section { border-top: 1px solid var(--border-subtle); margin-top: var(--space-10); padding-top: var(--space-8); }
+.section h2 { display: flex; align-items: center; gap: .5rem; font-size: var(--text-2xl); margin-bottom: .75rem; }
+.note, .byline { color: var(--text-secondary); line-height: 1.6; }
+.toolbar, .filters, .cardHeader { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; margin: 1rem 0; }
+.cardHeader { justify-content: space-between; color: var(--accent-secondary); font-size: var(--text-sm); }
+.card, .form { background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); margin: 1rem 0; padding: 1.25rem; }
+.card h3 { font-size: var(--text-lg); overflow-wrap: anywhere; }
+.description { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; margin: .75rem 0; }
+.byline { font-size: var(--text-sm); overflow-wrap: anywhere; }
+.section label { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.form label { margin: 1rem 0; }
+.form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.section input, .section select, .section textarea { border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: .65rem; background: var(--bg-surface-elevated); color: var(--text-primary); font: inherit; min-width: 0; max-width: 100%; }
+.form input, .form textarea { width: 100%; }
+.section textarea { resize: vertical; }
+.section button, .section a { display: inline-flex; align-items: center; gap: .4rem; padding: .6rem .9rem; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--bg-surface-elevated); color: var(--text-primary); font: inherit; cursor: pointer; text-decoration: none; }
+.section button[aria-pressed="true"] { border-color: var(--accent-secondary); color: var(--accent-secondary); }
+.section button:disabled { opacity: .55; cursor: default; }
+.section button:focus-visible, .section a:focus-visible, .section input:focus-visible, .section textarea:focus-visible, .section select:focus-visible { outline: 2px solid var(--accent-secondary); outline-offset: 2px; }
+.error { color: #fca5a5; margin: 1rem 0; }
+.success { color: #86efac; margin: 1rem 0; }

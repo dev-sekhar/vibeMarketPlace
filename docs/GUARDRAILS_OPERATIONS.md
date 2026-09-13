@@ -80,6 +80,8 @@ The home page shows the latest five matching apps and links to `/apps`. The dire
 
 ## Citations and recommendations
 
+App detail feedback boards use a separate migration: after the citation and language prerequisites, apply `docs/app_feedback_migration.sql` before deploying that feature. See [feedback board deployment, permissions and moderation](APP_FEEDBACK.md). Its votes rank bugs, feature requests and improvements independently from app upvotes and citations.
+
 For citation language checks, run `docs/citation_language_migration.sql` after the original citation migration and before deploying the updated client. It rejects common profanity in names, use cases and feedback, including direct writes, and hides existing matches without deleting them. See [scope, deployment and moderator review](CITATION_LANGUAGE.md). Clean negative feedback remains allowed; the word filter is not complete abuse detection.
 
 Before deploying the citations UI, run the complete `docs/app_citations_migration.sql` in Supabase SQL Editor as postgres. It creates a separate table; it can be applied after the base apps schema without requiring the app-submission migration. Existing app RLS determines which apps and citations are public. Do not rerun the full base schema. Add `https://openvibes.vercel.app/app/*` to Supabase Authentication → URL Configuration → Redirect URLs so GitHub sign-in can return to an app detail page (and the equivalent localhost URL for local testing).
