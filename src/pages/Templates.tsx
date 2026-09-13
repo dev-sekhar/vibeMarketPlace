@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, FileText, Search, X, Eye } from 'lucide-react';
 import { TEMPLATES, TEMPLATE_CATEGORIES, type DevTemplate } from '../lib/templates';
 import { Button } from '../components/ui/Button';
+import styles from './Templates.module.css';
 
 // ── Colour mapping per category ──────────────────────────────────────────────
 const CATEGORY_COLORS: Record<DevTemplate['category'], string> = {
+    guide: '#38bdf8',
+    testing: '#34d399',
     readme: '#38bdf8',
     gitignore: '#a78bfa',
     license: '#fb923c',
@@ -15,6 +18,8 @@ const CATEGORY_COLORS: Record<DevTemplate['category'], string> = {
 };
 
 const CATEGORY_ICONS: Record<DevTemplate['category'], string> = {
+    guide: '🧭',
+    testing: '🧪',
     readme: '📄',
     gitignore: '🚫',
     license: '⚖️',
@@ -24,6 +29,8 @@ const CATEGORY_ICONS: Record<DevTemplate['category'], string> = {
 };
 
 const CATEGORY_GRADIENTS: Record<DevTemplate['category'], string> = {
+    guide: 'linear-gradient(135deg, #38bdf8, #818cf8)',
+    testing: 'linear-gradient(135deg, #34d399, #38bdf8)',
     readme: 'linear-gradient(135deg, #38bdf8, #818cf8)',
     gitignore: 'linear-gradient(135deg, #a78bfa, #c084fc)',
     license: 'linear-gradient(135deg, #fb923c, #f43f5e)',
@@ -55,18 +62,25 @@ function PreviewModal({
     onClose: () => void;
 }) {
     const color = CATEGORY_COLORS[template.category];
+    const dialog = useRef<HTMLDialogElement>(null);
+    useEffect(() => {
+        const element = dialog.current;
+        element?.showModal();
+        return () => element?.close();
+    }, []);
     return (
-        <div
-            role="dialog"
-            aria-modal="true"
+        <dialog
+            ref={dialog}
+            className={styles.preview}
             aria-label={`Preview ${template.name}`}
-            onClick={onClose}
+            onCancel={onClose}
+            onClick={e => { if (e.target === e.currentTarget) onClose(); }}
             style={{
-                position: 'fixed', inset: 0, zIndex: 200,
-                background: 'rgba(0,0,0,0.72)',
-                backdropFilter: 'blur(4px)',
+                position: 'fixed', inset: 0, margin: 'auto', zIndex: 200,
+                background: 'transparent', border: 0,
+                width: 'min(100%, 800px)', maxWidth: '100%', maxHeight: '90dvh',
                 display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-                padding: 'var(--space-8) var(--space-4)',
+                padding: 'var(--space-4)',
                 overflowY: 'auto',
             }}
         >
@@ -85,6 +99,7 @@ function PreviewModal({
                 {/* Header */}
                 <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    flexWrap: 'wrap', gap: 'var(--space-3)',
                     padding: 'var(--space-5) var(--space-6)',
                     borderBottom: '1px solid var(--border-subtle)',
                     flexShrink: 0,
@@ -121,6 +136,9 @@ function PreviewModal({
                         </Button>
                     </div>
                 </div>
+                <p style={{ margin: 0, padding: 'var(--space-4) var(--space-6)', color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                    {template.guidance}
+                </p>
                 {/* Code content */}
                 <pre style={{
                     margin: 0,
@@ -131,12 +149,12 @@ function PreviewModal({
                     color: 'var(--text-secondary)',
                     overflowX: 'auto',
                     whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-all',
+                    overflowWrap: 'anywhere',
                 }}>
                     {template.content}
                 </pre>
             </div>
-        </div>
+        </dialog>
     );
 }
 
@@ -193,6 +211,9 @@ function TemplateCard({
             <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.6, flex: 1 }}>
                 {template.description}
             </p>
+            <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                {template.guidance}
+            </p>
 
             {/* Tags */}
             <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
@@ -238,10 +259,11 @@ export function Templates() {
 
     const filtered = TEMPLATES.filter(tpl => {
         const matchesCategory = activeCategory === 'all' || tpl.category === activeCategory;
-        const q = query.toLowerCase();
+        const q = query.trim().toLowerCase();
         const matchesQuery = !q || (
             tpl.name.toLowerCase().includes(q) ||
             tpl.description.toLowerCase().includes(q) ||
+            tpl.guidance.toLowerCase().includes(q) ||
             tpl.filename.toLowerCase().includes(q) ||
             tpl.tags.some(tag => tag.includes(q))
         );
@@ -271,6 +293,22 @@ export function Templates() {
                 </p>
             </div>
 
+            <section aria-labelledby="template-start-title" className="glass-panel" style={{ padding: 'var(--space-5)', marginBottom: 'var(--space-8)', lineHeight: 1.7 }}>
+                <h2 id="template-start-title">{t('templates.start.title')}</h2>
+                <p>{t('templates.start.purpose')}</p>
+                <ol style={{ paddingLeft: 'var(--space-6)' }}>
+                    <li>{t('templates.start.describe')}</li>
+                    <li>{t('templates.start.prepare')}</li>
+                    <li>{t('templates.start.test')}</li>
+                    <li>{t('templates.start.submit')}</li>
+                </ol>
+                <p>{t('templates.start.optional')}</p>
+                <p>{t('templates.start.language')}</p>
+                <Button variant="primary" onClick={() => setPreview(TEMPLATES.find(tpl => tpl.id === 'sharing-start-here')!)}>
+                    <Eye size={16} /> {t('templates.start.open')}
+                </Button>
+            </section>
+
             {/* ── Search + Filters ── */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginBottom: 'var(--space-8)' }}>
                 {/* Search bar */}
@@ -284,6 +322,7 @@ export function Templates() {
                     />
                     <input
                         type="text"
+                        aria-label={t('templates.search.placeholder')}
                         placeholder={t('templates.search.placeholder')}
                         value={query}
                         onChange={e => setQuery(e.target.value)}
@@ -345,7 +384,7 @@ export function Templates() {
             {filtered.length > 0 ? (
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
                     gap: 'var(--space-4)',
                 }}>
                     {filtered.map(tpl => (

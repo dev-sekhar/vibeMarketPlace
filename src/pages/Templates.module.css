@@ -1,0 +1,4 @@
+.preview::backdrop {
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+}
