@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { TEMPLATES } from '../src/lib/templates.ts';
 import { TEMPLATES as compatibilityTemplates } from '../src/data/templates.ts';
 import { inspectSnapshot, type Snapshot } from '../server/repoValidator.ts';
+import { filterResources, RESOURCE_KINDS, resourceDownloadName } from '../src/lib/resourceTypes.ts';
 
 const get = (id: string) => {
     const template = TEMPLATES.find(item => item.id === id);
@@ -44,6 +45,24 @@ test('unfilled report cannot qualify as evidence; an honestly completed manual r
         assert.equal(result.pass, true, `${template.id}: ${result.errors.join('; ')}`);
         assert.ok(result.warnings.some(warning => warning.includes('Failed/skipped')));
     }
+});
+
+test('tabs keep guides, agent instructions and file templates separate, including searches', () => {
+    assert.deepEqual(RESOURCE_KINDS, ['guides', 'instructions', 'templates']);
+    assert.equal(filterResources(TEMPLATES, 'guides').length, 4);
+    assert.equal(filterResources(TEMPLATES, 'instructions').length, 3);
+    assert.equal(filterResources(TEMPLATES, 'templates').length, 13);
+    assert.equal(filterResources(TEMPLATES, 'templates', 'all', 'CLAUDE.md').length, 0);
+    assert.deepEqual(filterResources(TEMPLATES, 'instructions', 'all', '  CLAUDE.md  ').map(item => item.id), ['claude-instructions']);
+    assert.equal(filterResources(TEMPLATES, 'guides', 'license').length, 0);
+    assert.equal(get('security-policy').kind, 'templates');
+    assert.equal(get('structure-react-vite').kind, 'guides');
+    assert.equal(get('test-report').kind, 'templates');
+    assert.equal(get('ai-evaluation-guide').audience, 'ai-powered');
+    assert.equal(get('agents-instructions').audience, 'ai-assisted');
+    assert.equal(resourceDownloadName(get('copilot-instructions')), 'copilot-instructions.md');
+    assert.equal(get('copilot-instructions').filename, '.github/copilot-instructions.md');
+    assert.match(get('claude-instructions').content, /^@AGENTS\.md/);
 });
 
 test('license downloads include full terms rather than application notices alone', () => {
