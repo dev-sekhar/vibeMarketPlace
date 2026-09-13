@@ -1,4 +1,5 @@
 import { publicName } from './articlePolicy';
+import { containsCitationProfanity, CITATION_PROFANITY_MESSAGE } from './citationLanguage';
 export const RECOMMENDATIONS = {
   recommend: 'Recommend', mixed: 'Mixed experience', not_recommended: 'Would not recommend',
 } as const;
@@ -20,6 +21,7 @@ export interface Citation extends Omit<CitationDraft, 'evidence_url'> {
   updated_at: string;
 }
 export function citationError(draft: CitationDraft): string | null {
+  if ([draft.display_name, draft.use_case, draft.feedback].some(containsCitationProfanity)) return CITATION_PROFANITY_MESSAGE;
   if (publicName(draft.display_name).length < 2 || draft.display_name.trim().length > 100) return 'Enter a public name of 2–100 characters, without an email address.';
   if (draft.use_case.trim().length < 20 || draft.use_case.trim().length > 500) return 'Describe how you used the app in 20–500 characters.';
   if (draft.feedback.trim().length < 30 || draft.feedback.trim().length > 2000) return 'Share useful feedback in 30–2,000 characters.';
