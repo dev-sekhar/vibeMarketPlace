@@ -1,4 +1,5 @@
 export function safeReturnPath(value: string | null | undefined): string {
+  if (value && /^\/app\/[a-zA-Z0-9_-]+$/.test(value)) return value;
   return ['/submit', '/profile', '/whitepapers'].includes(value ?? '') ? value! : '/';
 }
 export async function withTimeout<T>(work: Promise<T>, milliseconds = 15000): Promise<T> {

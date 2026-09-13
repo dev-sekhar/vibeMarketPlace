@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useTranslation } from 'react-i18next';
 import { CommunityLinks } from '../components/CommunityLinks';
+import { AppCitations } from '../components/AppCitations/AppCitations';
 import type { VibeApp } from '../types/app';
 import { sanitizeUrl } from '../lib/utils';
 
@@ -339,6 +340,7 @@ export const AppDetail = () => {
           </a>
         </aside>
       </div>
+      <AppCitations appId={app.id} creatorId={app.author_id} slug={app.slug} />
     </div>
   );
 };
