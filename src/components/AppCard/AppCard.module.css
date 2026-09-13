@@ -3,6 +3,8 @@
    ============================ */
 
 .card {
+  width: 100%;
+  min-width: 0;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
@@ -115,6 +117,8 @@
 /* ---- Meta row (category + upvote) ---- */
 .meta {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   align-items: center;
   justify-content: space-between;
 }
@@ -165,6 +169,7 @@
 
 /* ---- Title & Description ---- */
 .title {
+  overflow-wrap: anywhere;
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 700;
@@ -239,6 +244,7 @@
 /* ---- Author row ---- */
 .author {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   margin-top: auto;
@@ -260,6 +266,9 @@
 }
 
 .authorName {
+  flex: 1 1 100px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--text-sm);
   color: var(--text-secondary);
   font-weight: 500;
