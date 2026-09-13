@@ -1,13 +1,6 @@
-export interface DevTemplate {
-    id: string;
-    category: 'guide' | 'readme' | 'testing' | 'gitignore' | 'license' | 'contributing' | 'env' | 'structure';
-    name: string;
-    description: string;
-    filename: string;
-    content: string;
-    guidance: string;
-    tags: string[];
-}
+import type { DevResource } from './resourceTypes';
+import { AI_RESOURCES } from './aiResources';
+export type DevTemplate = DevResource;
 
 export const TEMPLATE_CATEGORIES = [
     { id: 'all', label: 'All Templates' },
@@ -19,6 +12,9 @@ export const TEMPLATE_CATEGORIES = [
     { id: 'contributing', label: 'CONTRIBUTING' },
     { id: 'env', label: '.env Example' },
     { id: 'structure', label: 'Repo Structure' },
+    { id: 'agent', label: 'Coding agents' },
+    { id: 'security', label: 'Security' },
+    { id: 'ai', label: 'AI behaviour' },
 ] as const;
 
 // Single source of truth for preview and download. License text is reproduced verbatim.
@@ -27,6 +23,8 @@ export const TEMPLATE_CATEGORIES = [
 export const TEMPLATES: DevTemplate[] = [
     {
         id: "sharing-start-here",
+        kind: "guides",
+        audience: "all",
         category: "guide",
         name: "Start here: share a useful app",
         description: "A step-by-step guide from your existing app to an honest open-source submission. No software background needed.",
@@ -109,6 +107,8 @@ Policy and exact report limits: https://github.com/dev-sekhar/vibeMarketPlace/bl
     },
     {
         id: "readme-vibe-app",
+        kind: "templates",
+        audience: "all",
         category: "readme",
         name: "App README: explain your project",
         description: "Start here for a web, desktop, mobile or other app. Explain who it helps and how someone can try and reuse it.",
@@ -152,6 +152,8 @@ See TEST_REPORT.json for the version tested, reproducible steps, observed result
     },
     {
         id: "readme-cli-tool",
+        kind: "templates",
+        audience: "all",
         category: "readme",
         name: "Command-line tool README",
         description: "For tools used by typing commands. Explain input, output and file changes in everyday language.",
@@ -195,6 +197,8 @@ See TEST_REPORT.json for the version tested, reproducible steps, observed result
     },
     {
         id: "readme-api",
+        kind: "templates",
+        audience: "all",
         category: "readme",
         name: "API README: explain your service",
         description: "For services called by other programs. Explain one real request, the response and access requirements.",
@@ -238,6 +242,8 @@ See TEST_REPORT.json for the version tested, reproducible steps, observed result
     },
     {
         id: "test-report",
+        kind: "templates",
+        audience: "all",
         category: "testing",
         name: "Record a real test: manual or automated",
         description: "The required report for what you tried, what happened and which saved version you tested.",
@@ -263,6 +269,8 @@ See TEST_REPORT.json for the version tested, reproducible steps, observed result
     },
     {
         id: "gitignore-node",
+        kind: "templates",
+        audience: "all",
         category: "gitignore",
         name: "Keep local files private: JavaScript",
         description: "For Node, React and similar apps: leave secrets, dependencies and generated files out of Git.",
@@ -307,6 +315,8 @@ coverage/
     },
     {
         id: "gitignore-python",
+        kind: "templates",
+        audience: "all",
         category: "gitignore",
         name: "Keep local files private: Python",
         description: "For Python apps and notebooks: exclude local settings and caches while keeping reusable source.",
@@ -357,6 +367,8 @@ htmlcov/
     },
     {
         id: "license-mit",
+        kind: "templates",
+        audience: "all",
         category: "license",
         name: "MIT License: full text",
         description: "An option allowing reuse, changes and redistribution, including commercial use, with its notice retained.",
@@ -388,6 +400,8 @@ SOFTWARE.
     },
     {
         id: "license-apache",
+        kind: "templates",
+        audience: "all",
         category: "license",
         name: "Apache 2.0 License: full text",
         description: "Includes reuse terms and an express patent grant. Read the complete obligations before choosing.",
@@ -600,6 +614,8 @@ SOFTWARE.
     },
     {
         id: "license-gpl3",
+        kind: "templates",
+        audience: "all",
         category: "license",
         name: "GNU GPL v3: full text",
         description: "A copyleft option with source-sharing obligations when covered works are conveyed. Read the full terms.",
@@ -1284,6 +1300,8 @@ Public License instead of this License.  But first, please read
     },
     {
         id: "contributing-standard",
+        kind: "templates",
+        audience: "all",
         category: "contributing",
         name: "Help others contribute",
         description: "Invite bug reports, clearer instructions and code changes, including help from people who do not code.",
@@ -1321,6 +1339,8 @@ Be patient with beginners and focus feedback on the work. [Add your actual condu
     },
     {
         id: "env-supabase-react",
+        kind: "templates",
+        audience: "all",
         category: "env",
         name: "Browser settings: Vite + Supabase",
         description: "Explain public browser configuration without exposing private AI or database credentials.",
@@ -1348,6 +1368,8 @@ VITE_SUPABASE_ANON_KEY=REPLACE_WITH_BROWSER_ANON_OR_PUBLISHABLE_KEY
     },
     {
         id: "env-node-api",
+        kind: "templates",
+        audience: "all",
         category: "env",
         name: "Private settings: backend service",
         description: "A server-only example for database connections and optional private service keys.",
@@ -1376,6 +1398,8 @@ DATABASE_URL=REPLACE_WITH_YOUR_PRIVATE_DATABASE_CONNECTION
     },
     {
         id: "structure-react-vite",
+        kind: "guides",
+        audience: "all",
         category: "structure",
         name: "Project folders explained",
         description: "An optional React/Vite folder map with plain-language descriptions and a simpler-project alternative.",
@@ -1408,5 +1432,6 @@ my-app/
 
 Delete folders you do not use, describe important entry points and link setup instructions from README.md. Creating these folders does not create a working app or protect data. Browser code and public assets are visible to visitors; keep secrets on a protected server. For Python, explain the main .py/.ipynb file and your actual dependency file instead. Keep the dependency lockfile you use so others can reproduce installation.
 `
-    }
+    },
+    ...AI_RESOURCES,
 ];

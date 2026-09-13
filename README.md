@@ -50,6 +50,8 @@ New to software development? Start with the [plain-language sharing guide](docs/
 
 The template catalog is maintained in `src/lib/templates.ts`; `src/data/templates.ts` re-exports it so previews and downloads stay consistent. README variants cover general apps, command-line tools and APIs. Full MIT, Apache 2.0 and GPL v3 texts are provided as alternatives, alongside a test report and optional configuration/contribution/folder guides. Browser configuration contains public settings only; private AI keys belong on a protected backend. Keep the catalog and sharing guide aligned with `docs/SUBMISSION_REQUIREMENTS.md` when changing policy. See [template review notes](docs/TEMPLATE_REVIEW.md) for sources and validation.
 
+The Resources page (`/templates`) separates **Guides** for people, **Instructions** for coding assistants and **Templates** for project files. It includes AGENTS.md, CLAUDE.md, Copilot instructions, SECURITY.md and guides to describing/evaluating AI features. Resources distinguish apps built with AI from apps using AI at runtime; all new AI resources remain optional. See [resource classification and maintenance](docs/TEMPLATE_REVIEW.md).
+
 ## Security
 
 - All user-supplied URLs are validated through `sanitizeUrl()` before being used in `href` or `window.open()` — only `http:` and `https:` schemes are allowed, preventing `javascript:` XSS injection

@@ -2,7 +2,23 @@
 
 The catalog supports OpenVibes' purpose: sharing useful applications as open source so others can understand, try, reuse and improve them. Small projects and manual testing remain welcome. Templates do not create functionality, prove licensing rights or certify quality.
 
-## Coverage
+## Three separate resource types
+
+The `/templates` route remains compatible, with navigation labelled Resources. Exactly three tabs separate resource types. Topic filters and searches apply only inside the selected tab; switching tabs resets them.
+
+- **Guides (4):** human reading material: sharing walkthrough, project folder map, AI behaviour explanation and AI evaluation method. Guides render as headings, paragraphs, lists and tables, with an optional reference download.
+- **Instructions (3):** root `AGENTS.md`, root `CLAUDE.md` and `.github/copilot-instructions.md`. These guide coding assistants but do not enforce permissions. Claude imports the customised AGENTS.md; Copilot has explicit instructions rather than a promised automatic import.
+- **Templates (13):** three README alternatives, one test report, two .gitignore variants, three full license alternatives, CONTRIBUTING.md, two environment examples and SECURITY.md. Choose only relevant alternatives.
+
+Each resource states its audience: any project, a project built with AI/coding assistants, or an app that calls AI while running. A project can belong to both AI categories. AI behaviour and evaluation are OpenVibes guide names, not special tool-loaded files or new mandatory submission checks.
+
+Copilot downloads as `copilot-instructions.md`; its card and preview show the required `.github/` destination. Downloads are examples for submitters' repositories, not instructions installed in OpenVibes itself.
+
+Conventions were checked against [AGENTS.md](https://agents.md/), [Claude memory/import documentation](https://code.claude.com/docs/en/memory) and [Copilot repository instructions](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions).
+
+AI resources live in `src/lib/aiResources.ts` and are included by the catalog. Required kind/audience fields and scoped filtering live in `src/lib/resourceTypes.ts`. Regression tests check tab isolation, classification and nested download filenames. UI tab labels and descriptions support EN/ES/ZH; detailed resources remain English.
+
+## Original file coverage
 
 | Template | Purpose and changes |
 | --- | --- |
