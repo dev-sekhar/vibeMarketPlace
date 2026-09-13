@@ -7,6 +7,7 @@ import { useVibeAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { publicName } from '../../lib/articlePolicy';
 import { citationError, RECOMMENDATIONS } from '../../lib/citations';
+import { citationSaveError } from '../../lib/citationLanguage';
 import type { Citation, CitationDraft } from '../../lib/citations';
 import styles from './AppCitations.module.css';
 
@@ -98,7 +99,7 @@ function CitationPanel({ appId, creatorId, slug, user }: Props & { user: User | 
         ? await supabase.from('app_citations').update(payload).eq('id', own.id).eq('user_id', user.id).select('*').single()
         : await supabase.from('app_citations').insert({ ...payload, app_id: appId }).select('*').single();
       if (result.error) {
-        setError(result.error.code === '23505' ? 'You already have a citation for this app. Reload the section to edit it.' : 'Your citation could not be saved. Please retry; if it persists, contact the maintainer.');
+        setError(citationSaveError(result.error));
         return;
       }
       setMessage(own ? 'Your citation has been updated.' : 'Your citation has been published. Thank you for sharing your experience.');
@@ -128,6 +129,7 @@ function CitationPanel({ appId, creatorId, slug, user }: Props & { user: User | 
       {user?.id === creatorId && <p className={styles.note}>This section is for people who have used your app. Creators cannot submit a citation for their own app.</p>}
       {user && user.id !== creatorId && <form className={styles.form} onSubmit={save}>
         <h3>{own ? 'Your citation' : 'Share your experience'}</h3>
+        <p className={styles.note}>Honest criticism is welcome. Keep your public name, use case and feedback free of profanity; describe the issue and how it could improve.</p>
         {own?.is_hidden && <p className={styles.note}>Your citation is hidden by a moderator. Edits remain hidden until reviewed.</p>}
         <label>Public name<input required minLength={2} maxLength={100} autoComplete="name" value={draft.display_name} onChange={e => setDraft({ ...draft, display_name: e.target.value })} /></label>
         <label>How did you use this app?<textarea required minLength={20} maxLength={500} rows={3} placeholder="Describe the task or project where you used it (20–500 characters)." value={draft.use_case} onChange={e => setDraft({ ...draft, use_case: e.target.value })} /></label>
