@@ -2,6 +2,8 @@
 
 OpenVibes welcomes small tools, weekend experiments and unfinished projects that others can understand, run and build on. It is not a dumping ground for unexplained repositories or promotional links. Contributors retain ownership of their work and must have the right to share it under the stated license.
 
+For a beginner-friendly walkthrough, read [Share your app: start here](SHARING_GUIDE.md). The `/templates` page provides the same guide and editable files, including `TEST_REPORT.json`. Replace prompts with actual project details and observations; downloading a template does not satisfy review on its own.
+
 ## Required before submitting
 
 1. **Public source repository.** Use the root HTTPS GitHub URL (`https://github.com/owner/repository`). A demo alone is insufficient. GitHub is the currently supported automatic validation provider. Root-level scripts and non-JavaScript projects are welcome; a `src/` directory and `package.json` are not mandatory.

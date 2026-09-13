@@ -46,6 +46,10 @@ All new submissions require public GitHub source, a recognised full license, a s
 
 Read [Submission requirements and report format](docs/SUBMISSION_REQUIREMENTS.md) and [Deployment and reviewer operations](docs/GUARDRAILS_OPERATIONS.md). Automatic checks establish documentation eligibility, not safety or verified quality. Existing listings are legacy entries until separately reviewed.
 
+New to software development? Start with the [plain-language sharing guide](docs/SHARING_GUIDE.md), also available from the app's `/templates` page. It explains each required file, GitHub editing without a terminal, manual functional tests and the report-only commit sequence. Downloads are editable English prompts, not completed documentation or evidence.
+
+The template catalog is maintained in `src/lib/templates.ts`; `src/data/templates.ts` re-exports it so previews and downloads stay consistent. README variants cover general apps, command-line tools and APIs. Full MIT, Apache 2.0 and GPL v3 texts are provided as alternatives, alongside a test report and optional configuration/contribution/folder guides. Browser configuration contains public settings only; private AI keys belong on a protected backend. Keep the catalog and sharing guide aligned with `docs/SUBMISSION_REQUIREMENTS.md` when changing policy. See [template review notes](docs/TEMPLATE_REVIEW.md) for sources and validation.
+
 ## Security
 
 - All user-supplied URLs are validated through `sanitizeUrl()` before being used in `href` or `window.open()` — only `http:` and `https:` schemes are allowed, preventing `javascript:` XSS injection
