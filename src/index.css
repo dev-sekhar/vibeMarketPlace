@@ -484,24 +484,22 @@ img.loaded {
   }
 }
 
-/* ── Home page app grid: 5-column on desktop, responsive ── */
+/* Equal-width cards: content and optional community links never size columns. */
 .app-grid-home {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   padding-bottom: var(--space-16);
 }
 
 @media (min-width: 640px) {
   .app-grid-home {
-    grid-template-columns: repeat(3, 1fr);
     gap: var(--space-5);
   }
 }
 
 @media (min-width: 1100px) {
   .app-grid-home {
-    grid-template-columns: repeat(5, 1fr);
     gap: var(--space-6);
   }
 }
