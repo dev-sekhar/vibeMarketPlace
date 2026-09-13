@@ -5,6 +5,8 @@ export interface CommunityLink {
 }
 
 export interface VibeApp {
+  projectStatus?: string;
+  validatedCommit?: string;
   id: string;
   author_id: string;
   name: string;

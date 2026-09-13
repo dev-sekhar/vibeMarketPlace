@@ -1,11 +1,14 @@
 import { Zap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { safeReturnPath } from '../lib/authFlow';
 import { SSOButtons } from '../components/auth/SSOButtons';
 import { useTranslation } from 'react-i18next';
 import styles from './Auth.module.css';
 
 export const Register = () => {
   const { t } = useTranslation();
+  const location = useLocation();
+  const next = safeReturnPath(new URLSearchParams(location.search).get('next'));
 
   return (
     <div className={styles.page}>
@@ -22,7 +25,7 @@ export const Register = () => {
 
         <p className={styles.switchText}>
           {t('register.hasAccount')}{' '}
-          <Link to="/login" className={styles.switchLink}>{t('register.signIn')}</Link>
+          <Link to={'/login?next=' + encodeURIComponent(next)} className={styles.switchLink}>{t('register.signIn')}</Link>
         </p>
       </div>
     </div>

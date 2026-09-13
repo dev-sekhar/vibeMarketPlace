@@ -1,10 +1,13 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { safeReturnPath } from '../lib/authFlow';
 import { SSOButtons } from '../components/auth/SSOButtons';
 import { useTranslation } from 'react-i18next';
 import styles from './Auth.module.css';
 
 export const Login = () => {
   const { t } = useTranslation();
+  const location = useLocation();
+  const next = safeReturnPath(new URLSearchParams(location.search).get('next'));
 
   return (
     <div className={styles.page}>
@@ -16,7 +19,7 @@ export const Login = () => {
 
         <p className={`${styles.switchText} ${styles.centered}`}>
           {t('login.noAccount')}{' '}
-          <Link to="/register" className={styles.switchLink}>{t('login.createAccount')}</Link>
+          <Link to={'/register?next=' + encodeURIComponent(next)} className={styles.switchLink}>{t('login.createAccount')}</Link>
         </p>
       </div>
     </div>

@@ -4,7 +4,8 @@ import {
   AppWindow, Link2, FileText, Image, ChevronRight, ChevronLeft,
   Check, Rocket, Info, LogIn
 } from 'lucide-react';
-import validationConfig from '../../config/validation-config.json';
+import { canonicalRepoUrl, isWebUrl, submissionErrors } from '../lib/submissionPolicy';
+import { forgetRequirements } from '../lib/requirementsConsent';
 import { useTranslation } from 'react-i18next';
 import type { AppCategory } from '../types/app';
 import { useVibeAuth } from '../context/AuthContext';
@@ -41,12 +42,7 @@ interface FormData {
   telegramUrl: string;
 }
 
-interface RepoValidationResponse {
-  pass: boolean;
-  errors: string[];
-  warnings: string[];
-  error?: string;
-}
+
 
 const EMPTY_FORM: FormData = {
   appName: '', category: '', repoUrl: '', appUrl: '',
@@ -65,24 +61,18 @@ const STEPS = [
 
 export const Submit = () => {
   const { t } = useTranslation();
-  const { user } = useVibeAuth();
+  const { user, loading: authLoading } = useVibeAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [projectStatus, setProjectStatus] = useState('experimental');
+  const [sharingConsent, setSharingConsent] = useState(false);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
-  const [showValidationAlert, setShowValidationAlert] = useState(false);
-  // Only validate if a validator URL is explicitly configured — never fall back to localhost
-  const validatorBase = import.meta.env.VITE_VALIDATOR_API_URL ?? '';
-
-  const showRepoValidationAlert = () => {
-    if (form.repoUrl.trim() && !showValidationAlert) {
-      setShowValidationAlert(true);
-    }
-  };
+  const validatorBase = (import.meta.env.VITE_VALIDATOR_API_URL ?? '').replace(/\/$/, '');
 
   const set = (field: keyof FormData, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }));
@@ -102,6 +92,8 @@ export const Submit = () => {
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { setSubmitError('Use a PNG, JPEG or WebP image up to 5 MB.'); return; }
+    setSubmitError(null);
     setForm(prev => ({
       ...prev,
       thumbnailFile: file,
@@ -111,151 +103,62 @@ export const Submit = () => {
 
   const canProceed = (): boolean => {
     if (step === 1) return form.appName.trim().length > 2 && form.category !== '';
-    if (step === 2) return form.repoUrl.trim().startsWith('http') || form.appUrl.trim().startsWith('http');
-    if (step === 3) return form.shortDescription.trim().length > 0 && form.longDescription.trim().length > 0;
+    if (step === 2) { try { canonicalRepoUrl(form.repoUrl); return !form.appUrl.trim() || isWebUrl(form.appUrl.trim()); } catch { return false; } }
+    if (step === 3) return form.shortDescription.trim().length >= 20 && form.longDescription.trim().length >= 80;
     return true;
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || loading) return;
+    setSubmitError(null); setValidationErrors([]); setValidationWarnings([]);
+    if (!validatorBase) { setSubmitError('Submissions are temporarily unavailable while our review service is configured.'); return; }
+    const payload = {
+      name: form.appName, category: form.category, repo_url: form.repoUrl.trim(), app_url: form.appUrl.trim(),
+      short_description: form.shortDescription, long_description: form.longDescription,
+      project_status: projectStatus, sharing_consent: sharingConsent,
+      tags: form.tags.split(',').map(v => v.trim()).filter(Boolean),
+      tech_stack: form.techStack.split(',').map(v => v.trim()).filter(Boolean),
+      community_links: [
+        form.slackUrl && { platform: 'slack', url: form.slackUrl },
+        form.whatsappUrl && { platform: 'whatsapp', url: form.whatsappUrl },
+        form.telegramUrl && { platform: 'telegram', url: form.telegramUrl },
+      ].filter(Boolean),
+      thumbnail_url: '',
+    };
+    const errors = submissionErrors(payload);
+    if (errors.length) { setValidationErrors(errors); return; }
     setLoading(true);
-    setSubmitError(null);
-    setValidationErrors([]);
-    setValidationWarnings([]);
-    setShowValidationAlert(false);
-
-    // Skip repo validation entirely when no validator API is configured
-    if (validatorBase && form.repoUrl.trim()) {
-      try {
-        const response = await fetch(`${validatorBase}/validate-repo`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ repoUrl: form.repoUrl.trim() }),
-        });
-
-        let validation: RepoValidationResponse;
-        try {
-          validation = await response.json();
-        } catch (parseError) {
-          setSubmitError('We couldn\'t check your repository right now. Please try again in a moment.');
-          setLoading(false);
-          return;
-        }
-
-        if (!response.ok) {
-          setSubmitError(validation.error ?? 'We\'re having trouble validating your repository. Please check the URL and try again.');
-          setLoading(false);
-          return;
-        }
-
-        if (!validation.pass) {
-          setValidationErrors(validation.errors ?? ['Your repository didn\'t meet our requirements.']);
-          setSubmitError('Your repository needs a few adjustments. See the details above and try again.');
-          setLoading(false);
-          return;
-        }
-
-        if (validation.warnings.length) {
-          setValidationWarnings(validation.warnings);
-        }
-      } catch {
-        setSubmitError('Unable to reach the repository validator. Check your internet connection and try again.');
-        setLoading(false);
-        return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sign in again before submitting.');
+      if (form.thumbnailFile) {
+        if (!['image/png', 'image/jpeg', 'image/webp'].includes(form.thumbnailFile.type) || form.thumbnailFile.size > 5 * 1024 * 1024) throw new Error('Use a PNG, JPEG or WebP image up to 5 MB.');
+        const ext = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }[form.thumbnailFile.type];
+        const filePath = user.id + '/' + crypto.randomUUID() + '.' + ext;
+        const { error } = await supabase.storage.from('thumbnails').upload(filePath, form.thumbnailFile);
+        if (error) throw new Error('Thumbnail upload failed. Please try again.');
+        payload.thumbnail_url = supabase.storage.from('thumbnails').getPublicUrl(filePath).data.publicUrl;
       }
-    }
-
-    let thumbnailUrl = '';
-
-    // Upload thumbnail if provided
-    if (form.thumbnailFile) {
-
-      const ext = form.thumbnailFile.name.split('.').pop();
-      const filePath = `${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from('thumbnails')
-        .upload(filePath, form.thumbnailFile, { upsert: true });
-
-      if (uploadError) {
-        setSubmitError(`Thumbnail upload failed: ${uploadError.message}`);
-        setLoading(false);
-        return;
+      const response = await fetch(validatorBase + '/submit-app', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify(payload), signal: AbortSignal.timeout(120000),
+      });
+      const result = await response.json();
+      if (Array.isArray(result.warnings)) setValidationWarnings(result.warnings);
+      if (!response.ok) {
+        if (Array.isArray(result.errors)) setValidationErrors(result.errors);
+        throw new Error(result.error ?? 'Submission did not meet the requirements. See the details below.');
       }
-
-      const { data: urlData } = supabase.storage.from('thumbnails').getPublicUrl(filePath);
-      thumbnailUrl = urlData.publicUrl;
-    }
-
-    // Insert app record
-    const slug = form.appName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    // Snapshot community links from user_metadata at submit time (fallback when profiles table absent)
-    const communityLinksSnapshot = [
-      form.slackUrl && { platform: 'slack', url: form.slackUrl },
-      form.whatsappUrl && { platform: 'whatsapp', url: form.whatsappUrl },
-      form.telegramUrl && { platform: 'telegram', url: form.telegramUrl },
-    ].filter(Boolean);
-
-    const { error: insertError } = await supabase.from('apps').insert({
-      name: form.appName,
-      slug: `${slug}-${Date.now()}`,
-      short_description: form.shortDescription,
-      long_description: form.longDescription,
-      category: form.category,
-      repo_url: form.repoUrl,
-      app_url: form.appUrl,
-      thumbnail_url: thumbnailUrl,
-      tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
-      tech_stack: form.techStack.split(',').map(t => t.trim()).filter(Boolean),
-      community_links: communityLinksSnapshot.length > 0 ? communityLinksSnapshot : null,
-      author_id: user.id,
-      author_name: user.user_metadata?.full_name ?? user.email ?? 'Anonymous',
-    });
-
-    setLoading(false);
-
-    if (insertError) {
-      setSubmitError(insertError.message);
-    } else {
+      if (result.status !== 'pending_review') throw new Error('Unexpected submission response. Please check before retrying.');
+      forgetRequirements();
       setSubmitted(true);
-    }
-  };
-
-  // Maps raw API error/warning strings to specific human-readable messages.
-  const ERROR_LABEL_MAP: [RegExp, string][] = [
-    [/readme/i, 'README.md is missing — add a README.md to the root of your repository'],
-    [/licen[sc]e/i, 'LICENSE file is missing — add a LICENSE file (e.g. MIT, Apache-2.0)'],
-    [/gitignore/i, '.gitignore is missing — add a .gitignore file to exclude build artefacts'],
-    [/source.?dir|src.?dir|no.?source/i, 'No source directory found — ensure src/, app/, or lib/ exists'],
-    [/manifest|package\.json|requirements/i, 'Package manifest missing — add package.json, requirements.txt, or similar'],
-    [/sensitiv|\.env|credential|secret|private.?key/i, 'Sensitive file detected — remove .env files, credentials, or private keys and rotate any exposed secrets'],
-    [/size|too.?large|exceeds/i, `Repository exceeds the ${validationConfig.validations.sizeLimitMB}MB size limit — remove large binaries or use Git LFS`],
-  ];
-
-  const WARNING_LABEL_MAP: [RegExp, string][] = [
-    [/contributing/i, 'No CONTRIBUTING.md — helps others understand how to contribute'],
-    [/test/i, 'No test directory detected — consider adding automated tests'],
-    [/ci|github.?action|workflow/i, 'No CI/CD pipeline found — consider adding GitHub Actions or similar'],
-    [/lint|eslint|prettier/i, 'No linter config detected — consider adding ESLint/Prettier'],
-    [/lock.?file|package-lock|yarn\.lock/i, 'No lock file found — commit package-lock.json or yarn.lock for reproducible installs'],
-    [/security|SECURITY/i, 'No SECURITY.md — consider documenting your vulnerability disclosure policy'],
-    [/large.?repo|repo.?large/i, 'Repository is large — consider trimming history or using Git LFS'],
-  ];
-
-  const formatValidationError = (msg: string): string => {
-    for (const [pattern, label] of ERROR_LABEL_MAP) {
-      if (pattern.test(msg)) return label;
-    }
-    return msg;
-  };
-
-  const formatValidationWarning = (msg: string): string => {
-    for (const [pattern, label] of WARNING_LABEL_MAP) {
-      if (pattern.test(msg)) return label;
-    }
-    return msg;
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Submission unavailable. Please retry.');
+    } finally { setLoading(false); }
   };
 
   // Guard: require login
+  if (authLoading) return <p role="status" style={{ padding: '40px' }}>Restoring your sign-in session…</p>;
   if (!user) {
     return (
       <div style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-8)' }}>
@@ -265,13 +168,14 @@ export const Submit = () => {
             Sign in to submit
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-6)' }}>
-            You need an account to submit an app to the marketplace.
+            Share projects you have the right to release as open source. A public GitHub repo, recognised license, useful README and test evidence are required. Submissions are reviewed before publication.
           </p>
+          <p><a href="/submission-requirements.html" target="_blank" rel="noopener noreferrer">Read submission requirements</a></p>
           <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/login" style={{ background: 'var(--gradient-neon)', color: '#fff', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)', fontWeight: 700, boxShadow: 'var(--shadow-glow)' }}>
+            <Link to="/login?next=/submit" style={{ background: 'var(--gradient-neon)', color: '#fff', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)', fontWeight: 700, boxShadow: 'var(--shadow-glow)' }}>
               Sign In
             </Link>
-            <Link to="/register" style={{ background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)', fontWeight: 600 }}>
+            <Link to="/register?next=/submit" style={{ background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)', fontWeight: 600 }}>
               Create Account
             </Link>
           </div>
@@ -292,10 +196,10 @@ export const Submit = () => {
             <Check size={36} color="#fff" strokeWidth={2.5} />
           </div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-3xl)', marginBottom: 'var(--space-3)' }}>
-            {t('submit.confirm.title')}
+            Submitted for review
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-8)' }}>
-            <strong style={{ color: 'var(--text-primary)' }}>{form.appName}</strong> {t('submit.confirm.message')}
+            <strong style={{ color: 'var(--text-primary)' }}>{form.appName}</strong> is awaiting review. Automated checks establish documentation eligibility, not a safety or quality certification.
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
@@ -305,7 +209,7 @@ export const Submit = () => {
               {t('submit.confirm.browseMarketplace')}
             </button>
             <button
-              onClick={() => { setSubmitted(false); setForm(EMPTY_FORM); setStep(1); }}
+              onClick={() => { forgetRequirements(); window.location.assign('/submit'); }}
               style={{ background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-strong)', color: 'var(--text-primary)', padding: 'var(--space-3) var(--space-6)', borderRadius: 'var(--radius-full)', fontWeight: 600, cursor: 'pointer' }}
             >
               {t('submit.confirm.submitAnother')}
@@ -324,11 +228,17 @@ export const Submit = () => {
             {t('submit.page.title')}
           </h1>
           <p className={styles.subtitle}>
-            {t('submit.page.subtitle')}
+            Share a project others can understand, run and build on. Small experiments are welcome; unexplained code dumps are not.
           </p>
         </div>
 
+        <div className={styles.infoBox} style={{ display: 'block', marginBottom: 'var(--space-5)' }}>
+          <strong>Built something useful? Share it as open source.</strong>
+          <p>Public GitHub source, a recognised license, README with setup/usage/limitations, and a revision-linked TEST_REPORT.json are required. A live demo is optional. Every new submission awaits review.</p>
+          <a href="/submission-requirements.html" target="_blank" rel="noopener noreferrer">Requirements and test report format</a>
+        </div>
         {/* Step tracker */}
+        {!validatorBase && <p role="alert">Submissions are temporarily unavailable while our review service is configured.</p>}
         <div className={styles.stepper} role="tablist">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
@@ -361,6 +271,11 @@ export const Submit = () => {
                   {CATEGORIES.map(c => <option key={c} value={c}>{t(CATEGORY_TRANSLATION_KEY[c])}</option>)}
                 </select>
               </Field>
+              <Field label="Project status" hint="Be clear about what works and what is unfinished.">
+                <select className={styles.input} aria-label="Project status" value={projectStatus} onChange={e => setProjectStatus(e.target.value)}>
+                  <option value="experimental">Experimental</option><option value="usable">Usable</option><option value="maintained">Maintained</option>
+                </select>
+              </Field>
               <Field label={t('submit.field.techStack')} hint={t('submit.field.techStackHint')}>
                 <input id="submit-tech-stack" type="text" className={styles.input} placeholder={t('submit.placeholder.techStack')} value={form.techStack} onChange={e => set('techStack', e.target.value)} />
               </Field>
@@ -372,32 +287,10 @@ export const Submit = () => {
 
           {step === 2 && (
             <StepWrap title={t('submit.section.links')}>
-              <Field label={t('submit.field.repoUrl')} hint={t('submit.field.repoUrlHint')}>
-                <input id="submit-repo-url" type="url" className={styles.input} placeholder={t('submit.placeholder.repoUrl')} value={form.repoUrl} onChange={e => set('repoUrl', e.target.value)} onBlur={showRepoValidationAlert} />
+              <Field label={t('submit.field.repoUrl')} hint="Required: public https://github.com/owner/repository. GitHub is currently the supported validation provider.">
+                <input id="submit-repo-url" type="url" className={styles.input} placeholder={t('submit.placeholder.repoUrl')} value={form.repoUrl} onChange={e => set('repoUrl', e.target.value)} />
               </Field>
 
-              {showValidationAlert && form.repoUrl.trim() && validatorBase && (
-                <div style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.4)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
-                  <h4 style={{ margin: '0 0 var(--space-3) 0', color: 'var(--text-primary)', fontSize: 'var(--text-base)', fontWeight: 600 }}>
-                    Repository Validation Checklist
-                  </h4>
-                  <p style={{ margin: '0 0 var(--space-3) 0', color: 'var(--text-secondary)', fontSize: 'var(--text-sm)' }}>
-                    Your repository will be checked against these requirements at submission:
-                  </p>
-                  <ul style={{ margin: '0 0 var(--space-3) 0', paddingLeft: 'var(--space-4)' }}>
-                    {validationConfig.validations.readmeRequired && <li style={{ marginBottom: 'var(--space-1)', color: 'var(--text-secondary)' }}>✅ README.md present at root</li>}
-                    {validationConfig.validations.licenseRequired && <li style={{ marginBottom: 'var(--space-1)', color: 'var(--text-secondary)' }}>✅ LICENSE file present</li>}
-                    {validationConfig.validations.sourceDirectoryRequired && <li style={{ marginBottom: 'var(--space-1)', color: 'var(--text-secondary)' }}>✅ Source directory found (src/, app/, lib/, etc.)</li>}
-                    {validationConfig.validations.packageManifestRequired && <li style={{ marginBottom: 'var(--space-1)', color: 'var(--text-secondary)' }}>✅ Package manifest present (package.json, requirements.txt, etc.)</li>}
-                    {validationConfig.validations.gitignoreRequired && <li style={{ marginBottom: 'var(--space-1)', color: 'var(--text-secondary)' }}>✅ .gitignore file present</li>}
-                    {validationConfig.validations.sensitiveFilesCheck && <li style={{ marginBottom: 'var(--space-1)', color: 'var(--text-secondary)' }}>⚠️ No sensitive files committed (.env, credentials, private keys)</li>}
-                    {validationConfig.validations.sizeLimitCheck && <li style={{ marginBottom: 'var(--space-1)', color: 'var(--text-secondary)' }}>⚠️ Repository under {validationConfig.validations.sizeLimitMB}MB</li>}
-                  </ul>
-                  <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>
-                    <strong>Note:</strong> Failing a ✅ required check will block submission. ⚠️ warnings are shown but won't block.
-                  </p>
-                </div>
-              )}
               <Field label={t('submit.field.appUrl')} hint={t('submit.field.appUrlHint')}>
                 <input id="submit-app-url" type="url" className={styles.input} placeholder={t('submit.placeholder.appUrl')} value={form.appUrl} onChange={e => set('appUrl', e.target.value)} />
               </Field>
@@ -423,7 +316,7 @@ export const Submit = () => {
               <div className={styles.infoBox}>
                 <Info size={15} color="var(--accent-base)" style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-                  {t('submit.info.liveImmediately')}
+                  Projects are checked and held for review before publication. Duplicate repositories and misleading or unrelated promotional submissions are not accepted.
                 </p>
               </div>
             </StepWrap>
@@ -442,6 +335,10 @@ export const Submit = () => {
 
           {step === 4 && (
             <StepWrap title={t('submit.section.media')}>
+<label style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                <input type="checkbox" checked={sharingConsent} onChange={e => setSharingConsent(e.target.checked)} />
+                I have the right to share this code under its stated open-source license. My description and test evidence are accurate, and I have disclosed known limitations. I retain ownership of my contributions.
+              </label>
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-5)' }}>
                 {t('submit.media.recommendation')}
               </p>
@@ -471,7 +368,7 @@ export const Submit = () => {
               <ul style={{ marginTop: 'var(--space-2)', paddingLeft: 'var(--space-4)' }}>
                 {validationErrors.map((error, idx) => (
                   <li key={idx} style={{ marginBottom: 'var(--space-1)' }}>
-                    ❌ {formatValidationError(error)}
+                    ❌ {error}
                   </li>
                 ))}
               </ul>
@@ -484,7 +381,7 @@ export const Submit = () => {
               <ul style={{ marginTop: 'var(--space-2)', paddingLeft: 'var(--space-4)' }}>
                 {validationWarnings.map((warning, idx) => (
                   <li key={idx} style={{ marginBottom: 'var(--space-1)' }}>
-                    ⚠️ {formatValidationWarning(warning)}
+                    ⚠️ {warning}
                   </li>
                 ))}
               </ul>
@@ -509,8 +406,8 @@ export const Submit = () => {
                 {t('submit.button.next')} <ChevronRight size={16} />
               </button>
             ) : (
-              <button id="submit-publish" type="button" className={styles.publishBtn} onClick={handleSubmit} disabled={loading}>
-                {loading ? <><span className={styles.spinner} /> {t('submit.button.publishing')}</> : <><Rocket size={16} /> {t('submit.button.publish')}</>}
+              <button id="submit-publish" type="button" className={styles.publishBtn} onClick={handleSubmit} disabled={loading || !sharingConsent || !validatorBase}>
+                {loading ? <><span className={styles.spinner} /> {t('submit.button.publishing')}</> : <><Rocket size={16} /> Submit for review</>}
               </button>
             )}
           </div>

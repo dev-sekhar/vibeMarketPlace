@@ -1,3 +1,4 @@
+import { publicName } from '../../lib/articlePolicy';
 import { ExternalLink, User, PenLine, Share2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import styles from './PaperCard.module.css';
@@ -19,6 +20,7 @@ interface PaperCardProps {
     external_url: string;
     source: string;
     author_name: string;
+    article_author_name?: string | null;
     author_linkedin_url?: string | null;
     author_badge?: AuthorBadge | null;
     article_author_handle?: string | null;
@@ -114,9 +116,11 @@ const getAuthorProfileUrl = (externalUrl: string, authorLinkedinUrl?: string | n
     return null;
 };
 
-export const PaperCard = ({ title, description, external_url, source, author_name, author_linkedin_url, author_badge, article_author_handle, is_own_article, created_at, onClick }: PaperCardProps) => {
+export const PaperCard = ({ title, description, external_url, source, author_name, article_author_name, author_linkedin_url, author_badge, article_author_handle, is_own_article, created_at, onClick }: PaperCardProps) => {
     // For both own and shared articles: use stored profile URL first, then derive from article URL
-    const profileUrl = getAuthorProfileUrl(external_url, author_linkedin_url);
+    const sharerName = publicName(author_name) || 'Community member';
+    const byline = publicName(article_author_name, is_own_article ? author_name : null, article_author_handle) || 'Author not specified';
+    const profileUrl = is_own_article ? getAuthorProfileUrl(external_url, author_linkedin_url) : (author_linkedin_url ? sanitizeUrl(author_linkedin_url) : null);
     const [previewImg, setPreviewImg] = useState<string | null>(null);
 
     useEffect(() => {
@@ -192,6 +196,7 @@ export const PaperCard = ({ title, description, external_url, source, author_nam
                     <p className={styles.description}>{description}</p>
                 )}
 
+                {!is_own_article && <p className={styles.description}>By {byline}</p>}
                 {/* Author row — name is a link to their profile when available */}
                 <div className={styles.author}>
                     <div className={styles.avatar}>
@@ -206,14 +211,14 @@ export const PaperCard = ({ title, description, external_url, source, author_nam
                                 onClick={e => e.stopPropagation()}
                                 className={styles.authorLink}
                             >
-                                {article_author_handle ?? author_name}
+                                {byline}
                                 <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#a78bfa', fontWeight: 600 }}>
                                     <PenLine size={9} /> Author
                                 </span>
                             </a>
                         ) : (
                             <span className={styles.authorName}>
-                                {article_author_handle ?? author_name}
+                                {byline}
                                 <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#a78bfa', fontWeight: 600 }}>
                                     <PenLine size={9} /> Author
                                 </span>
@@ -227,14 +232,14 @@ export const PaperCard = ({ title, description, external_url, source, author_nam
                             onClick={e => e.stopPropagation()}
                             className={styles.authorLink}
                         >
-                            {author_name}
+                            {sharerName}
                             <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 500 }}>
                                 <Share2 size={9} /> Shared
                             </span>
                         </a>
                     ) : (
                         <span className={styles.authorName}>
-                            {author_name}
+                            {sharerName}
                             <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 500 }}>
                                 <Share2 size={9} /> Shared
                             </span>

@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import { sourceAtRevision } from '../lib/submissionPolicy';
 import { ArrowLeft, ExternalLink, Code2, ArrowUp, Tag, Layers, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
@@ -71,7 +72,9 @@ export const AppDetail = () => {
           },
           upvotes: data.upvotes || 0,
           demoUrl: data.app_url,
-          repoUrl: data.repo_url,
+          repoUrl: sourceAtRevision(data.repo_url, data.validated_commit),
+          projectStatus: data.project_status,
+          validatedCommit: data.validated_commit,
           featured: data.featured || false,
           createdAt: data.created_at,
         };
@@ -168,6 +171,11 @@ export const AppDetail = () => {
           </p>
 
           {/* What it does */}
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-5)' }}>
+            {app.validatedCommit
+              ? `Project status: ${app.projectStatus ?? 'experimental'}. Source links point to reviewed revision ${app.validatedCommit.slice(0, 7)}. Documentation checks are not a safety certification.`
+              : 'Legacy listing: this project has not yet been checked under the current submission requirements.'}
+          </p>
           <Section icon={<Layers size={20} color="var(--accent-base)" />} title={t('appDetail.whatItDoes')}>
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.75, margin: 0 }}>
               {app.longDescription}

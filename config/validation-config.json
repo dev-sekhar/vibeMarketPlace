@@ -1,21 +1,7 @@
 {
-    "validations": {
-        "readmeRequired": true,
-        "licenseRequired": true,
-        "sourceDirectoryRequired": false,
-        "packageManifestRequired": false,
-        "gitignoreRequired": true,
-        "sensitiveFilesCheck": true,
-        "sizeLimitCheck": false,
-        "sizeLimitMB": 100
-    },
-    "warnings": {
-        "missingContributing": true,
-        "missingTests": true,
-        "missingCI": true,
-        "missingLinting": true,
-        "largeRepository": true,
-        "missingLockFile": true,
-        "missingSecurityPolicy": true
-    }
+  "policyVersion": 2,
+  "maxRepositoryKB": 102400,
+  "maxTreeEntries": 10000,
+  "maxDocumentBytes": 262144,
+  "acceptedLicenses": ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "MPL-2.0", "GPL-2.0", "GPL-3.0", "AGPL-3.0", "LGPL-2.1", "LGPL-3.0", "Unlicense", "BSL-1.0", "EPL-2.0", "Zlib", "0BSD"]
 }

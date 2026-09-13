@@ -1,0 +1,13 @@
+.directory-filters { display:flex; flex-wrap:wrap; gap:1rem; align-items:end; margin-top:1.5rem; }
+.directory-filters label { display:flex; gap:.5rem; flex-direction:column; color:var(--text-secondary); }
+.directory-filters input:not([type=checkbox]), .directory-filters select { padding:.75rem; background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--border-strong); border-radius:.5rem; max-width:100%; }
+.directory-filters button, .directory-pagination button { padding:.65rem 1rem; color:var(--text-primary); background:var(--bg-surface-elevated); border:1px solid var(--border-strong); border-radius:.5rem; cursor:pointer; }
+.directory-pagination { display:flex; justify-content:center; gap:1rem; align-items:center; padding:2rem 0; }
+.directory-pagination button:disabled { opacity:.45; cursor:default; }
+.directory-filters label:has(input[type=checkbox]) { flex-direction:row; align-items:center; padding:.75rem 0; }
+.listing-header { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-4); }
+.listing-header-icon { color:rgba(180,130,255,.75); flex-shrink:0; }
+.listing-header h2 { color:rgba(200,175,255,.85); font-weight:700; font-size:var(--text-sm); letter-spacing:.05em; text-transform:uppercase; margin:0; }
+.listing-header-line { flex:1; min-width:12px; height:1px; background:rgba(255,120,220,.28); }
+.listing-header a { color:rgba(168,130,255,.8); font-weight:600; font-size:var(--text-sm); text-decoration:none; flex-shrink:0; white-space:nowrap; }
+

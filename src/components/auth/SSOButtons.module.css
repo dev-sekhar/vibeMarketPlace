@@ -32,3 +32,4 @@
 .ssoBtn svg {
   flex-shrink: 0;
 }
+.ssoBtn:disabled { opacity: .65; cursor: wait; transform: none; }

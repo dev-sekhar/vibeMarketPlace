@@ -8,12 +8,18 @@ Items are grouped by priority tier. PRs for any item are welcome.
 
 ---
 
+## Submission guardrails update — September 2026
+
+Implemented mandatory server-side submission checks, revision-linked evidence, database write restrictions, duplicate indexes and pending-review publication. See [requirements](SUBMISSION_REQUIREMENTS.md) and [operations](GUARDRAILS_OPERATIONS.md). This code still requires the SQL migration/API/frontend deployment.
+
+Remaining: reviewer dashboard and notifications; author resubmission/edit workflow; shared production rate limiting; audit legacy listings; deeper sandboxed security scanning; multilingual policy copy; semantic duplicate/spam review. Do not add an automatic “Verified” badge for documentation checks.
+
 ## Priority 1 — Critical Gaps (Specified but Missing)
 
 These features were defined in the original spec and are absent from v1.0.0.
 
 ### 1.1 Community Reporting & Moderation Queue
-**Spec reference:** §2B — Post-Moderation Model
+**Updated model:** review before publication for new submissions; reporting remains useful for published apps.
 
 - [ ] Add a **"Report App"** button on `AppDetail` (inappropriate, broken, or harmful content)
 - [ ] Create a `reports` table in Supabase with `app_id`, `reporter_id`, `reason`, `created_at`
@@ -133,7 +139,7 @@ Not in the original spec, but significantly improve usability and community grow
 ### 3.4 Rate Limiting on Repo Validator
 - [ ] The `server/index.ts` endpoint has no rate limiting; it can be abused to clone arbitrary repositories
 - [ ] Add per-IP rate limiting (e.g. 10 requests/minute) using a simple in-memory store or Redis
-- [ ] Add a `CORS_ORIGIN` env var check so only the production domain can call the validator
+- [x] Require an exact `CORS_ORIGIN` for browser requests to the authenticated submission API
 
 ### 3.5 Email / Password Reset Flow
 - [ ] The current email-auth flow has no password reset path

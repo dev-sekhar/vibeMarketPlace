@@ -200,3 +200,6 @@ CREATE POLICY "Users can upload own thumbnails" ON storage.objects
     AND (storage.foldername(name))[1] = auth.uid()::text
   );
 -- ============================================================
+
+-- REQUIRED NEXT: apply submission_guardrails_migration.sql once before deploying the new submission API.
+-- It replaces direct app writes and public visibility rules for pending submissions.

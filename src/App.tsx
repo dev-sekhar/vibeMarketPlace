@@ -3,6 +3,7 @@ import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
 import { AppDetail } from './pages/AppDetail';
 import { Submit } from './pages/Submit';
+import { SubmissionGate } from './components/SubmissionGate/SubmissionGate';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Whitepapers } from './pages/Whitepapers';
@@ -16,9 +17,10 @@ function App() {
       <OnboardingModal />
       <Layout>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home key="home" />} />
+          <Route path="/apps" element={<Home key="directory" directory />} />
           <Route path="/app/:slug" element={<AppDetail />} />
-          <Route path="/submit" element={<Submit />} />
+          <Route path="/submit" element={<SubmissionGate><Submit /></SubmissionGate>} />
           <Route path="/whitepapers" element={<Whitepapers />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/profile" element={<Profile />} />

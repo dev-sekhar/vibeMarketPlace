@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "ES2023", "module": "ESNext", "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true, "noEmit": true, "strict": true,
+    "skipLibCheck": true, "types": ["node"], "verbatimModuleSyntax": true
+  },
+  "include": ["server", "scripts", "tests", "src/lib/submissionPolicy.ts"]
+}

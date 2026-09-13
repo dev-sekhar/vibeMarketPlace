@@ -1,6 +1,10 @@
+import { uniqueArticles } from '../lib/articlePolicy';
+import { filterApps } from '../lib/appDirectory';
 import { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { BookOpen } from 'lucide-react';
+import './Directory.css';
+import { sourceAtRevision } from '../lib/submissionPolicy';
+import { Link, useSearchParams } from 'react-router-dom';
+import { BookOpen, LayoutGrid } from 'lucide-react';
 import { Hero } from '../components/Hero/Hero';
 import { AppCard } from '../components/AppCard/AppCard';
 import { PaperCard } from '../components/PaperCard/PaperCard';
@@ -10,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { HOME_APPS_LIMIT, HOME_WHITEPAPERS_LIMIT } from '../config/home';
 import type { VibeApp, AppCategory } from '../types/app';
 
-type LatestPaper = { id: string; title: string; description: string; external_url: string; source: string; author_name: string; created_at: string };
+type LatestPaper = { id: string; title: string; description: string; external_url: string; source: string; author_name: string; created_at: string; article_author_name?: string; article_author_handle?: string; is_own_article?: boolean };
 
 const ALL_CATEGORIES: { key: AppCategory; translationKey: string }[] = [
   { key: 'Web App', translationKey: 'category.webApp' },
@@ -22,30 +26,45 @@ const ALL_CATEGORIES: { key: AppCategory; translationKey: string }[] = [
   { key: 'AI Assistant', translationKey: 'category.aiAssistant' },
 ];
 
-export const Home = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<AppCategory | null>(null);
+export const Home = ({ directory = false }: { directory?: boolean }) => {
+  const [params, setParams] = useSearchParams();
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const updateFilter = (key: string, value: string) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value); else next.delete(key);
+    next.delete('page');
+    setParams(next, { replace: true });
+  };
+  const [homeSearch, setHomeSearch] = useState('');
+  const searchQuery = directory ? params.get('q') || '' : homeSearch;
+  const setSearchQuery = (value: string) => directory ? updateFilter('q', value) : setHomeSearch(value);
+  const [homeCategory, setHomeCategory] = useState<AppCategory | null>(null);
+  const activeCategory = directory ? params.get('category') : homeCategory;
+  const setActiveCategory = (value: AppCategory | null) => directory ? updateFilter('category', value || '') : setHomeCategory(value);
   const [apps, setApps] = useState<VibeApp[]>([]);
   const [latestPapers, setLatestPapers] = useState<LatestPaper[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [showAll, setShowAll] = useState(false);
   const [userUpvotes, setUserUpvotes] = useState<Set<string>>(new Set());
   const { t } = useTranslation();
   const { user } = useVibeAuth();
 
   useEffect(() => {
     const fetchApps = async () => {
+      setLoading(true);
+      setLoadError(false);
       try {
-        const { data, error } = await supabase
-          .from('apps')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error fetching apps:', error);
-          setApps([]);
-        } else if (data) {
+        const data = [];
+        for (let offset = 0; ; offset += 500) {
+          const { data: batch, error } = await supabase.from('apps').select('*')
+            .order('created_at', { ascending: false }).order('id')
+            .range(offset, offset + 499);
+          if (error) throw error;
+          data.push(...(batch || []));
+          if (!batch || batch.length < 500) break;
+        }
+        {
           const transformedApps: VibeApp[] = data.map(app => ({
             id: app.id,
             author_id: app.author_id,
@@ -53,7 +72,7 @@ export const Home = () => {
             slug: app.slug,
             shortDescription: app.short_description,
             longDescription: app.long_description,
-            thumbnail: app.thumbnail_url || '/placeholder-app.png',
+            thumbnail: app.thumbnail_url || '',
             category: app.category as AppCategory,
             tags: app.tags || [],
             techStack: app.tech_stack || [],
@@ -65,7 +84,9 @@ export const Home = () => {
             },
             upvotes: app.upvotes,
             demoUrl: app.app_url,
-            repoUrl: app.repo_url,
+            repoUrl: sourceAtRevision(app.repo_url, app.validated_commit),
+            projectStatus: app.project_status,
+            validatedCommit: app.validated_commit,
             featured: app.featured,
             createdAt: app.created_at,
           }));
@@ -73,6 +94,7 @@ export const Home = () => {
         }
       } catch (error) {
         console.error('[Home] Error in fetchApps:', error);
+        setLoadError(true);
         setApps([]);
       } finally {
         setLoading(false);
@@ -82,15 +104,15 @@ export const Home = () => {
     const fetchPapers = async () => {
       const { data } = await supabase
         .from('whitepapers')
-        .select('id, title, description, external_url, source, author_name, created_at')
+        .select('id, title, description, external_url, source, author_name, created_at, article_author_handle, is_own_article, article_author_name')
         .order('created_at', { ascending: false })
         .limit(HOME_WHITEPAPERS_LIMIT);
-      setLatestPapers(data ?? []);
+      setLatestPapers(uniqueArticles(data ?? []));
     };
 
     fetchApps();
-    fetchPapers();
-  }, []);
+    if (!directory) fetchPapers();
+  }, [directory, retry]);
 
   // Fetch which apps the current user has already upvoted
   useEffect(() => {
@@ -100,28 +122,21 @@ export const Home = () => {
       .select('app_id')
       .eq('user_id', user.id)
       .then(({ data }) => setUserUpvotes(new Set((data ?? []).map((r: { app_id: string }) => r.app_id))));
-  }, [user?.id]);
+  }, [user]);
 
-  const filtered = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    return apps.filter(app => {
-      const matchesSearch =
-        !q ||
-        app.name.toLowerCase().includes(q) ||
-        app.shortDescription.toLowerCase().includes(q) ||
-        app.tags.some(t => t.toLowerCase().includes(q)) ||
-        app.author.name.toLowerCase().includes(q);
-      const matchesCategory = !activeCategory || app.category === activeCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchQuery, activeCategory, apps]);
+  const filtered = useMemo(() => filterApps(apps, searchQuery, activeCategory, directory, params), [apps, searchQuery, activeCategory, directory, params]);
 
   const featuredApps = useMemo(() => apps.filter(a => a.featured), [apps]);
 
   const isFiltering = !!searchQuery || !!activeCategory;
-  // When not searching/filtering, cap display to HOME_APPS_LIMIT. When filtering, show all matches.
-  const displayedApps = isFiltering || showAll ? filtered : filtered.slice(0, HOME_APPS_LIMIT);
-  const hasMore = !isFiltering && !showAll && filtered.length > HOME_APPS_LIMIT;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 12));
+  const requestedPage = Number(params.get('page'));
+  const page = Number.isSafeInteger(requestedPage) ? Math.min(pageCount, Math.max(1, requestedPage)) : 1;
+  const displayedApps = directory ? filtered.slice((page - 1) * 12, page * 12) : filtered.slice(0, HOME_APPS_LIMIT);
+  const directoryParams = new URLSearchParams();
+  if (searchQuery) directoryParams.set('q', searchQuery);
+  if (activeCategory) directoryParams.set('category', activeCategory);
+  const directoryUrl = '/apps' + (directoryParams.size ? '?' + directoryParams : '');
 
   const handleUpvote = async (appId: string, delta: number) => {
     if (!user) return; // Must be authenticated to upvote
@@ -162,10 +177,10 @@ export const Home = () => {
   return (
     <>
       {/* ── Hero ── */}
-      <Hero onSearch={setSearchQuery} />
+      {!directory && <Hero onSearch={setSearchQuery} />}
 
       {/* ── Platform Section ── */}
-      <section
+      {!directory && <section
         style={{
           padding: 'var(--space-16) var(--space-4)',
           textAlign: 'center',
@@ -192,10 +207,10 @@ export const Home = () => {
             {t('platform.description')}
           </p>
         </div>
-      </section>
+      </section>}
 
       {/* ── Latest Research — full-width strip ── */}
-      {latestPapers.length > 0 && (
+      {!directory && latestPapers.length > 0 && (
         <section style={{
           width: '100%',
           background: 'linear-gradient(100deg, rgba(20,8,50,0.85) 0%, rgba(50,10,90,0.75) 45%, rgba(80,15,60,0.75) 100%)',
@@ -206,37 +221,7 @@ export const Home = () => {
           WebkitBackdropFilter: 'blur(8px)',
         }}>
           <div className="container">
-            {/* Strip header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-3)',
-              marginBottom: 'var(--space-4)',
-            }}>
-              <BookOpen size={16} style={{ color: 'rgba(180,130,255,0.75)', flexShrink: 0 }} />
-              <span style={{
-                color: 'rgba(200,175,255,0.85)',
-                fontWeight: 700,
-                fontSize: 'var(--text-sm)',
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
-              }}>
-                {t('home.latestResearch')}
-              </span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,120,220,0.28)' }} />
-              <Link
-                to="/whitepapers"
-                style={{
-                  color: 'rgba(168,130,255,0.80)',
-                  fontWeight: 600,
-                  fontSize: 'var(--text-sm)',
-                  textDecoration: 'none',
-                  flexShrink: 0,
-                }}
-              >
-                {t('home.viewAllPapers')} →
-              </Link>
-            </div>
+            <ListingHeader title={t('home.latestResearch')} to="/whitepapers" linkText={t('home.viewAllPapers')} icon={BookOpen} />
 
             {/* Papers grid */}
             <div style={{
@@ -253,8 +238,9 @@ export const Home = () => {
                   external_url={paper.external_url ?? ''}
                   source={paper.source ?? ''}
                   author_name={paper.author_name}
-                  article_author_handle={(paper as any).article_author_handle ?? null}
-                  is_own_article={(paper as any).is_own_article ?? false}
+                  article_author_name={paper.article_author_name}
+                  article_author_handle={paper.article_author_handle ?? null}
+                  is_own_article={paper.is_own_article ?? false}
                   created_at={paper.created_at}
                   onClick={() => window.open(paper.external_url, '_blank', 'noopener,noreferrer')}
                 />
@@ -266,7 +252,7 @@ export const Home = () => {
 
       <div className="container" style={{ marginTop: 'var(--space-10)' }}>
         {/* ── Featured Spotlight ── */}
-        {!searchQuery && !activeCategory && !loading && featuredApps.length > 0 && (
+        {!directory && !searchQuery && !activeCategory && !loading && featuredApps.length > 0 && (
           <section aria-label="Featured apps" style={{ marginBottom: 'var(--space-12)' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-3)', marginBottom: 'var(--space-6)' }}>
               <h2 style={{
@@ -291,6 +277,21 @@ export const Home = () => {
           </section>
         )}
 
+        {directory && <>
+          <h1>Explore open-source apps</h1>
+          <p>Discover projects to try, learn from, and contribute to.</p>
+          <div className="directory-filters">
+            <label>Search<input type="search" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="App, creator, tag, or technology" /></label>
+            <label>Project status<select value={params.get('status') || ''} onChange={e => updateFilter('status', e.target.value)}>
+              <option value="">All statuses</option><option value="experimental">Experimental</option><option value="usable">Usable</option><option value="maintained">Maintained</option><option value="unspecified">Not specified</option>
+            </select></label>
+            <label>Sort by<select value={params.get('sort') || 'latest'} onChange={e => updateFilter('sort', e.target.value)}>
+              <option value="latest">Newest first</option><option value="votes">Most upvoted</option><option value="name">Name A–Z</option>
+            </select></label>
+            <label><input type="checkbox" checked={params.get('demo') === 'yes'} onChange={e => updateFilter('demo', e.target.checked ? 'yes' : '')} /> Has a live demo</label>
+            <button type="button" onClick={() => setParams({})}>Clear filters</button>
+          </div>
+        </>}
         {/* ── Category Pills ── */}
         <section
           aria-label="Filter by category"
@@ -314,27 +315,28 @@ export const Home = () => {
               label={t(cat.translationKey)}
               id={`filter-${cat.key.toLowerCase().replace(/\s+/g, '-')}`}
               active={activeCategory === cat.key}
-              onClick={() => setActiveCategory(prev => prev === cat.key ? null : cat.key)}
+              onClick={() => setActiveCategory(activeCategory === cat.key ? null : cat.key)}
             />
           ))}
         </section>
 
-        {/* ── Results header ── */}
+        {!directory && <ListingHeader title={t('home.latestApps', 'Latest Apps')} to={directoryUrl} linkText={t('home.viewAllPapers')} icon={LayoutGrid} />}
+        {/* Search details and result counts sit below the section header. */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           marginBottom: 'var(--space-6)',
         }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, margin: 0 }}>
+          {(directory || isFiltering) && <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, margin: 0 }}>
             {searchQuery
               ? <>{t('home.resultsFor')} "<span className="text-gradient">{searchQuery}</span>"</>
               : activeCategory
                 ? t(ALL_CATEGORIES.find(cat => cat.key === activeCategory)?.translationKey || '')
                 : t('home.allApps')}
-          </h2>
+          </h2>}
           <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>
-            {isFiltering
+            {directory || isFiltering
               ? `${filtered.length} ${filtered.length === 1 ? t('home.app') : t('home.apps')}`
               : t('home.showingLatest', { limit: Math.min(HOME_APPS_LIMIT, filtered.length), total: apps.length })}
           </span>
@@ -346,7 +348,7 @@ export const Home = () => {
           aria-label="App listings"
           className="app-grid-home"
         >
-          {loading ? (
+          {loadError ? <div role="alert"><p>Apps could not be loaded. Please try again.</p><button onClick={() => setRetry(n => n + 1)}>Retry</button></div> : loading ? (
             // Loading skeleton
             Array.from({ length: HOME_APPS_LIMIT }).map((_, i) => (
               <div key={i} style={{
@@ -408,27 +410,11 @@ export const Home = () => {
           )}
         </section>
 
-        {/* ── View all apps link ── */}
-        {hasMore && (
-          <div style={{ textAlign: 'center', paddingBottom: 'var(--space-16)' }}>
-            <button
-              onClick={() => setShowAll(true)}
-              style={{
-                background: 'none',
-                border: '1px solid var(--border-strong)',
-                borderRadius: 'var(--radius-full)',
-                color: 'var(--accent-secondary)',
-                fontWeight: 700,
-                fontSize: 'var(--text-sm)',
-                padding: 'var(--space-3) var(--space-6)',
-                cursor: 'pointer',
-                transition: 'all var(--transition-fast)',
-              }}
-            >
-              {t('home.viewAllApps', { count: apps.length })}
-            </button>
-          </div>
-        )}
+        {directory && !loading && !loadError && filtered.length > 0 && <nav aria-label="Apps pagination" className="directory-pagination">
+          <button disabled={page === 1} onClick={() => { const next = new URLSearchParams(params); next.set('page', String(page - 1)); setParams(next); }}>Previous</button>
+          <span aria-live="polite">Page {page} of {pageCount}</span>
+          <button disabled={page === pageCount} onClick={() => { const next = new URLSearchParams(params); next.set('page', String(page + 1)); setParams(next); }}>Next</button>
+        </nav>}
       </div>
     </>
   );
@@ -460,4 +446,13 @@ const FilterPill = ({ label, id, active, onClick }: FilterPillProps) => (
   >
     {label}
   </button>
+);
+
+const ListingHeader = ({ title, to, linkText, icon: Icon }: { title: string; to: string; linkText: string; icon: typeof BookOpen }) => (
+  <div className="listing-header">
+    <Icon size={16} className="listing-header-icon" aria-hidden="true" />
+    <h2>{title}</h2>
+    <div className="listing-header-line" aria-hidden="true" />
+    <Link to={to}>{linkText}</Link>
+  </div>
 );

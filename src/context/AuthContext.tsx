@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { safeReturnPath, withTimeout, oauthErrorMessage } from '../lib/authFlow';
 
 export interface GeoData {
   city: string;
@@ -16,10 +17,11 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  authError: string | null;
   sessionTimeLeft: number | null; // seconds remaining in session, null when not logged in
   isSessionExpiring: boolean;     // true when < 5 minutes left
   signInWithGoogle: () => Promise<void>;
-  signInWithGitHub: () => Promise<void>;
+  signInWithGitHub: (returnPath?: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<string | null>;
   signUpWithEmail: (name: string, email: string, password: string, geo?: GeoData) => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -37,6 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(() => oauthErrorMessage(window.location.search, window.location.hash));
   const [sessionTimeLeft, setSessionTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -49,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (remaining <= 0) {
         setSessionTimeLeft(0);
         clearInterval(timerRef.current!);
-        supabase.auth.signOut();
+        // Supabase refreshes tokens itself. Do not race refresh or call auth APIs from its callback.
       } else {
         setSessionTimeLeft(remaining);
       }
@@ -59,22 +62,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Restore session on mount
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      startSessionTimer(data.session);
-      setLoading(false);
-    });
-
-    // Listen for auth state changes
+    let active = true;
+    let eventVersion = 0;
+    // Keep this callback synchronous and free of Supabase auth calls.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (!active) return;
+      eventVersion++;
       setSession(newSession);
       setUser(newSession?.user ?? null);
       startSessionTimer(newSession);
+      if (newSession) setAuthError(null);
+      setLoading(false);
     });
+    const initialVersion = eventVersion;
+    withTimeout(supabase.auth.getSession()).then(({ data, error }) => {
+      if (!active || eventVersion !== initialVersion) return;
+      if (error) throw error;
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      startSessionTimer(data.session);
+    }).catch(() => {
+      if (active && eventVersion === initialVersion) setAuthError('Your session could not be restored. Retry sign-in, or try a private browser window.');
+    }).finally(() => { if (active) setLoading(false); });
 
     return () => {
+      active = false;
       subscription.unsubscribe();
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -83,17 +95,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isSessionExpiring = sessionTimeLeft !== null && sessionTimeLeft > 0 && sessionTimeLeft < 300;
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
+    const { error } = await withTimeout(supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/` },
-    });
+    }));
+    if (error) throw error;
   };
 
-  const signInWithGitHub = async () => {
-    await supabase.auth.signInWithOAuth({
+  const signInWithGitHub = async (returnPath = '/') => {
+    setAuthError(null);
+    // Request the URL without navigating so a late result cannot redirect after a timeout.
+    const { data, error } = await withTimeout(supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: { redirectTo: `${window.location.origin}/` },
-    });
+      options: { redirectTo: `${window.location.origin}${safeReturnPath(returnPath)}`, skipBrowserRedirect: true },
+    }));
+    if (error) throw error;
+    if (!data.url) throw new Error('GitHub sign-in is unavailable. Please retry.');
+    window.location.assign(data.url);
   };
 
   const signInWithEmail = async (email: string, password: string): Promise<string | null> => {
@@ -169,12 +187,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, sessionTimeLeft, isSessionExpiring, signInWithGoogle, signInWithGitHub, signInWithEmail, signUpWithEmail, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, authError, sessionTimeLeft, isSessionExpiring, signInWithGoogle, signInWithGitHub, signInWithEmail, signUpWithEmail, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// The context hook intentionally shares this module with its provider.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useVibeAuth = (): AuthContextValue => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useVibeAuth must be used inside <AuthProvider>');

@@ -1,4 +1,7 @@
 import { useVibeAuth } from '../../context/AuthContext';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { safeReturnPath } from '../../lib/authFlow';
 import styles from './SSOButtons.module.css';
 
 const GitHubIcon = () => (
@@ -12,7 +15,21 @@ interface SSOButtonsProps {
 }
 
 export const SSOButtons = ({ label = 'sign-in' }: SSOButtonsProps) => {
-  const { signInWithGitHub } = useVibeAuth();
+  const { signInWithGitHub, user, authError } = useVibeAuth();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const started = useRef(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const returnPath = safeReturnPath(new URLSearchParams(location.search).get('next'));
+  useEffect(() => { if (user) navigate(returnPath, { replace: true }); }, [user, returnPath, navigate]);
+  const signIn = async () => {
+    if (started.current) return;
+    started.current = true; setPending(true); setError(null);
+    try { await signInWithGitHub(returnPath); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'GitHub sign-in failed. Please retry.'); }
+    finally { started.current = false; setPending(false); }
+  };
 
   return (
     <div className={styles.ssoRow}>
@@ -20,11 +37,15 @@ export const SSOButtons = ({ label = 'sign-in' }: SSOButtonsProps) => {
         id={`sso-github-${label}`}
         type="button"
         className={styles.ssoBtn}
-        onClick={signInWithGitHub}
+        onClick={signIn}
+        disabled={pending}
+        aria-busy={pending}
       >
         <GitHubIcon />
-        Continue with GitHub
+        {pending ? 'Connecting to GitHub…' : 'Continue with GitHub'}
       </button>
+      {(error || authError) && <p role="alert" style={{ color: '#fca5a5', lineHeight: 1.5 }}>{error || authError}</p>}
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>If GitHub displays an error page, return here and retry. A private browser window can help isolate a stale session.</p>
     </div>
   );
 };

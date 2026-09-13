@@ -38,6 +38,14 @@ OpenVibes is where builders share apps created with AI-assisted coding tools (Cu
 
 ---
 
+## Submission quality requirements
+
+Built something useful? Share it as open source. Small experiments are welcome when others can understand, run and build on them.
+
+All new submissions require public GitHub source, a recognised full license, a substantive README, a revision-linked TEST_REPORT.json, actual source, a nonempty .gitignore, honest project status and permission to share. Manual functional tests are acceptable. Demo links are optional. Duplicates are blocked and all qualifying submissions await human review before publication.
+
+Read [Submission requirements and report format](docs/SUBMISSION_REQUIREMENTS.md) and [Deployment and reviewer operations](docs/GUARDRAILS_OPERATIONS.md). Automatic checks establish documentation eligibility, not safety or verified quality. Existing listings are legacy entries until separately reviewed.
+
 ## Security
 
 - All user-supplied URLs are validated through `sanitizeUrl()` before being used in `href` or `window.open()` — only `http:` and `https:` schemes are allowed, preventing `javascript:` XSS injection
@@ -52,7 +60,7 @@ OpenVibes is where builders share apps created with AI-assisted coding tools (Cu
 
 ### Prerequisites
 
-- Node.js ≥ 18
+- Node.js ≥ 22
 - A [Supabase](https://supabase.com) project
 
 ### 1. Clone & install
@@ -81,6 +89,7 @@ Key points:
 - Run **Security Migration 1** to protect `upvotes`/`featured` from direct API manipulation
 - Run **Security Migration 2** to restrict thumbnail uploads to each user's own storage folder
 - Row-Level Security is enabled on all tables
+- Apply `docs/submission_guardrails_migration.sql` once after the base schema. Follow the deployment order in `docs/GUARDRAILS_OPERATIONS.md`; the new client cannot submit without the trusted API.
 
 ### 4. Run locally
 
@@ -144,6 +153,10 @@ config/
 | `npm run build` | Type-check + production build |
 | `npm run lint` | Run ESLint |
 | `npm run preview` | Preview production build locally |
+| `npm test` | Validator, submission API and SQL guardrail regression tests |
+| `npm run typecheck:server` | Check server, CLI and tests |
+| `npm run validate-server` | Start the trusted submission/review API |
+| `npm run validate-repo -- URL` | Check a public GitHub repository; nonzero exit on rejection |
 
 ---
 
@@ -161,3 +174,6 @@ Please follow the existing code style (CSS Modules, typed props, i18n keys for a
 ## License
 
 See [LICENSE](LICENSE).
+# Article sharing and app discovery
+
+The homepage shows the latest five apps, with an `/apps` directory for search, filters and sorting. Article links are unique across all users, and article authors are displayed separately from people sharing their work. Apply `docs/article_integrity_migration.sql` before deploying the updated frontend; deployment and duplicate-recovery details are in [Guardrails operations](docs/GUARDRAILS_OPERATIONS.md).

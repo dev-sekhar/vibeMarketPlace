@@ -1,65 +1,30 @@
-import http from 'http';
-import { validateRepository, ValidationResult } from '../src/lib/repoValidator.ts';
+import { createClient } from '@supabase/supabase-js';
+import { createSubmissionServer } from './api.ts';
+import { validateRepository } from './repoValidator.ts';
 
-const PORT = Number(process.env.PORT ?? 4000);
-const ALLOWED_ORIGIN = process.env.CORS_ORIGIN ?? '*';
-
-const jsonHeaders = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-    'Access-Control-Allow-Methods': 'OPTIONS, POST',
-    'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-function sendJson(res: http.ServerResponse, statusCode: number, payload: unknown) {
-    res.writeHead(statusCode, jsonHeaders);
-    res.end(JSON.stringify(payload));
-}
-
-function parseBody(req: http.IncomingMessage): Promise<string> {
-    return new Promise((resolve, reject) => {
-        let body = '';
-        req.on('data', chunk => { body += chunk; });
-        req.on('end', () => resolve(body));
-        req.on('error', reject);
-    });
-}
-
-const server = http.createServer(async (req, res) => {
-    if (!req.url) {
-        sendJson(res, 404, { error: 'Missing request path' });
-        return;
-    }
-
-    if (req.method === 'OPTIONS') {
-        sendJson(res, 204, {});
-        return;
-    }
-
-    if (req.method === 'POST' && req.url === '/validate-repo') {
-        try {
-            const body = await parseBody(req);
-            const parsed = JSON.parse(body || '{}');
-            const repoUrl = parsed.repoUrl?.toString().trim();
-
-            if (!repoUrl) {
-                sendJson(res, 400, { error: 'Missing repoUrl in request body' });
-                return;
-            }
-
-            const validation: ValidationResult = await validateRepository(repoUrl);
-            sendJson(res, 200, validation);
-        } catch (error) {
-            sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
-        }
-
-        return;
-    }
-
-    sendJson(res, 404, { error: 'Not found' });
-});
-
-server.listen(PORT, () => {
-    // eslint-disable-next-line no-console
-    console.log(`Repository validation API running on http://localhost:${PORT}`);
-});
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, CORS_ORIGIN } = process.env;
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !CORS_ORIGIN || CORS_ORIGIN === '*') throw new Error('Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and an exact CORS_ORIGIN. Never expose the service key in VITE_* variables.');
+const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+const server = createSubmissionServer({
+  async authenticate(token) {
+    const { data, error } = await db.auth.getUser(token);
+    if (error || !data.user) return null;
+    return { id: data.user.id, name: String(data.user.user_metadata?.full_name ?? 'OpenVibes contributor').slice(0, 100) };
+  },
+  validate: validateRepository,
+  async exists(url, repositoryId) {
+    // Values are constrained to GitHub owner/repo characters by canonicalRepoUrl.
+    const { data, error } = await db.from('apps').select('id').or(`repo_key.eq.${url}${repositoryId ? `,repository_id.eq.${repositoryId}` : ''}`).limit(1);
+    if (error) throw error;
+    return Boolean(data?.length);
+  },
+  async insert(record) {
+    const { error } = await db.from('apps').insert(record);
+    if (error?.code === '23505') return 'duplicate';
+    if (error) throw error;
+    return 'created';
+  },
+}, CORS_ORIGIN);
+server.requestTimeout = 20000;
+server.headersTimeout = 10000;
+server.listen(Number(process.env.PORT ?? 4000), () => console.log('OpenVibes submission API listening.'));

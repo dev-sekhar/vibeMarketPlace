@@ -1,3 +1,4 @@
+import { articleKey, publicName, uniqueArticles } from '../lib/articlePolicy';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Link2, CheckCircle2, Share2 } from 'lucide-react';
@@ -22,6 +23,7 @@ interface Whitepaper {
     author_linkedin_url: string | null;
     is_own_article: boolean;
     article_author_handle: string | null;
+    article_author_name: string | null;
 }
 
 interface FormData {
@@ -30,11 +32,13 @@ interface FormData {
     url: string;
     source: string;
     isOwnArticle: boolean;
+    displayName: string;
+    articleAuthor: string;
 }
 
 const SOURCES = ['Medium', 'LinkedIn', 'Dev.to', 'Substack', 'Hashnode', 'GitHub', 'Other'];
 
-const EMPTY_FORM: FormData = { title: '', description: '', url: '', source: 'Medium', isOwnArticle: false };
+const EMPTY_FORM: FormData = { title: '', description: '', url: '', source: 'Medium', isOwnArticle: false, displayName: '', articleAuthor: '' };
 
 const isValidUrl = (s: string) => {
     try {
@@ -127,15 +131,14 @@ export const Whitepapers = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchWhitepapers = async () => {
-        setFetchLoading(true);
         const { data } = await supabase
             .from('whitepapers')
-            .select('id, created_at, title, description, external_url, source, author_name, author_id, author_linkedin_url, is_own_article, article_author_handle')
+            .select('id, created_at, title, description, external_url, source, author_name, author_id, author_linkedin_url, is_own_article, article_author_handle, article_author_name')
             .order('created_at', { ascending: false });
-        const items: Whitepaper[] = data ?? [];
+        const items: Whitepaper[] = uniqueArticles(data ?? []);
         setWhitepapers(items);
 
-        // Compute badges per author (apps submitted + papers submitted)
+        // Creator badges count apps only; sharing articles does not earn app tiers.
         const authorIds = [...new Set(items.map(w => w.author_id))];
         if (authorIds.length > 0) {
             const { data: authorApps } = await supabase
@@ -146,13 +149,9 @@ export const Whitepapers = () => {
             (authorApps ?? []).forEach((a: { author_id: string }) => {
                 appCounts[a.author_id] = (appCounts[a.author_id] ?? 0) + 1;
             });
-            const paperCounts: Record<string, number> = {};
-            items.forEach(w => {
-                paperCounts[w.author_id] = (paperCounts[w.author_id] ?? 0) + 1;
-            });
             const badges: Record<string, Badge | null> = {};
             authorIds.forEach(id => {
-                badges[id] = getBadge((appCounts[id] ?? 0) + (paperCounts[id] ?? 0));
+                badges[id] = getBadge(appCounts[id] ?? 0);
             });
             setAuthorBadges(badges);
         }
@@ -176,7 +175,10 @@ export const Whitepapers = () => {
         setForm(prev => ({ ...prev, [field]: value }));
 
     const handleSubmit = async () => {
-        if (!user) return;
+        if (!user || loading) return;
+        if (!articleKey(form.url)) { setError('Enter the full, direct article URL.'); return; }
+        if (publicName(form.displayName).length < 2 || publicName(form.articleAuthor).length < 2) { setError('Enter your public name and the article author’s name, without email addresses.'); return; }
+        if (whitepapers.some(paper => articleKey(paper.external_url) === articleKey(form.url))) { setError('This article has already been shared on OpenVibes. Each article can be shared only once, across all users.'); return; }
         if (!form.title.trim()) { setError('Title is required.'); return; }
         if (!form.url.trim() || !isValidUrl(form.url.trim())) {
             setError('A valid URL is required.');
@@ -227,13 +229,15 @@ export const Whitepapers = () => {
         // Derive the stored handle from the article URL automatically
         const storedHandle = extractAuthorHandle(form.url.trim());
 
+        try {
         const { error: insertError } = await supabase.from('whitepapers').insert({
             title: form.title.trim(),
             description: form.description.trim(),
             external_url: form.url.trim(),
             source: form.source || 'Other',
             author_id: user.id,
-            author_name: user.user_metadata?.full_name ?? user.email ?? 'Anonymous',
+            author_name: form.displayName.trim(),
+            article_author_name: form.articleAuthor.trim(),
             author_linkedin_url: socialId
                 ? (user.user_metadata?.[`social_${socialId}`] as string | undefined) ?? null
                 : (user.user_metadata?.social_linkedin as string | undefined) ?? null,
@@ -242,13 +246,15 @@ export const Whitepapers = () => {
         });
 
         if (insertError) {
-            setError(insertError.message);
+            setError(insertError.code === '23505' ? 'This article has already been shared on OpenVibes. Each article can be shared only once, across all users.' : insertError.message);
         } else {
             setShowForm(false);
             setForm(EMPTY_FORM);
             fetchWhitepapers();
         }
-        setLoading(false);
+        } catch {
+            setError('The article could not be submitted. Please try again.');
+        } finally { setLoading(false); }
     };
 
     // Derived: author handle detected from article URL
@@ -277,6 +283,8 @@ export const Whitepapers = () => {
                         <button
                             onClick={() => {
                                 if (!user) { navigate('/login'); return; }
+                                const name = publicName(user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.user_name, user.user_metadata?.preferred_username);
+                                setForm({ ...EMPTY_FORM, displayName: name });
                                 setShowForm(true);
                             }}
                             style={{
@@ -375,6 +383,10 @@ export const Whitepapers = () => {
                                 </div>
                             </div>
 
+                            <p>Each article can be shared only once on OpenVibes, regardless of who submits it. Use its full article URL.</p>
+                            <label>Your public name *<input className={styles.input} value={form.displayName} onChange={e => set('displayName', e.target.value)} maxLength={100} autoComplete="name" /></label>
+                            <label>Article author’s name *<input className={styles.input} value={form.articleAuthor} onChange={e => set('articleAuthor', e.target.value)} maxLength={100} placeholder="Name shown in the article’s byline" /></label>
+                            <p>Copy the byline from the article. Names are supplied by the person sharing the link; they are not verified automatically.</p>
                             {/* Authorship declaration */}
                             <div style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
                                 <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 'var(--space-3)' }}>
@@ -383,7 +395,7 @@ export const Whitepapers = () => {
                                 <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
                                     <button
                                         type="button"
-                                        onClick={() => set('isOwnArticle', true)}
+                                        onClick={() => setForm(prev => ({ ...prev, isOwnArticle: true, articleAuthor: prev.displayName }))}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: 6,
                                             padding: 'var(--space-2) var(--space-4)',
@@ -482,6 +494,7 @@ export const Whitepapers = () => {
                                 external_url={wp.external_url}
                                 source={wp.source}
                                 author_name={wp.author_name}
+                                article_author_name={wp.article_author_name}
                                 author_linkedin_url={wp.author_linkedin_url}
                                 author_badge={authorBadges[wp.author_id] ?? null}
                                 article_author_handle={wp.article_author_handle}
@@ -496,4 +509,3 @@ export const Whitepapers = () => {
         </div>
     );
 };
-

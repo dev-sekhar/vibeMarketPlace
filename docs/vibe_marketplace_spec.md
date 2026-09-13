@@ -1,6 +1,6 @@
 # OpenVibes — Vibe-Coded Apps Marketplace
 **Requirement Specification & Implementation Guide**
-*Last updated: April 2026 — reflects current build state*
+*Submission policy updated: September 2026. Requires the guardrails database migration and API rollout.*
 
 ---
 
@@ -36,7 +36,7 @@ The platform must feel state-of-the-art and "alive" — exceptional visual aesth
 - **Authentication**: GitHub OAuth via Supabase Auth. Email/password registration also supported. Google SSO available in `AuthContext` but not yet surfaced in the login UI.
 - **Onboarding Modal**: On first login, users are prompted to set their full name and social profile links before proceeding.
 - **Profile Page** (`/profile`): Edit full name; add/update social links (LinkedIn, Medium, GitHub — driven by `config/socialLinks.json`). Social link changes trigger a **24-hour article-submission cooldown** to prevent abuse.
-- **Creator Badges**: Gamified badge tiers displayed in the Navbar next to the user's name, earned by submitting apps:
+- **Creator Badges**: Badge tiers in the Navbar and article cards count only the creator's apps visible in the directory. Shared articles do not contribute to app badge thresholds. Four apps earns Builder; Maker requires at least five apps:
   | Badge | Tier | Requirement |
   |---|---|---|
   | 🥉 Newcomer | newcomer | 1+ apps |
@@ -49,7 +49,7 @@ The platform must feel state-of-the-art and "alive" — exceptional visual aesth
 ### ✅ D. App Submission Portal
 - **Submit App** form at `/submit` (authenticated only).
 - **Fields**: App Name, Category, Repository URL, App URL (Live Demo), Short Description, Long Description, Thumbnail upload (Supabase Storage `thumbnails` bucket).
-- **Post-moderation model**: Apps go live immediately on submit.
+- **Review before publication**: Mandatory server-side repository and listing checks create `pending_review` rows. A maintainer explicitly publishes qualifying projects. Direct browser INSERT/UPDATE is blocked by database grants, restrictive RLS and a trigger.
 - **Featured tier**: `featured` boolean column — set manually by admins to promote apps to the Featured Spotlight on the home page.
 
 ### ✅ E. Research & Whitepapers
@@ -180,3 +180,8 @@ The platform must feel state-of-the-art and "alive" — exceptional visual aesth
 | — | Automated harmful content screening | 🔲 Planned |
 | — | Creator tipping (Web 2.5 / crypto wallet) | 🔲 Planned |
 | — | Google SSO surfaced in Login UI | 🔲 Planned |
+
+
+## Submission quality policy (September 2026)
+
+The canonical policy is [SUBMISSION_REQUIREMENTS.md](SUBMISSION_REQUIREMENTS.md), with deployment and human review in [GUARDRAILS_OPERATIONS.md](GUARDRAILS_OPERATIONS.md). Public GitHub source and a recognised license are required; a live demo alone is not sufficient. README structure, revision-linked functional test evidence, source/hygiene checks, project status, sharing rights and duplicate checks are enforced. Automated results do not certify safety, test execution or usefulness. Existing listings remain legacy entries until reviewed. New public source links are pinned to the inspected revision. Manual review handles misleading claims, thin clones, usefulness and disclosed failures; a review dashboard remains future work.

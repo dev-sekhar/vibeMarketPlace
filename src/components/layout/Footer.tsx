@@ -18,7 +18,7 @@ export const Footer = () => {
             fontFamily: 'var(--font-display)', fontWeight: 700,
             fontSize: 'var(--text-lg)', display: 'block', marginBottom: 'var(--space-2)',
           }}>
-            VibeMarket
+            OpenVibes
           </Link>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)', margin: 0 }}>
             Built with{' '}
@@ -29,7 +29,7 @@ export const Footer = () => {
 
         <div style={{ textAlign: 'right' }}>
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0 }}>
-            © {new Date().getFullYear()} VibeMarket · Open Source
+            © {new Date().getFullYear()} OpenVibes · Open Source
           </p>
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', opacity: 0.5, margin: '2px 0 0' }}>
             v{__APP_VERSION__}
