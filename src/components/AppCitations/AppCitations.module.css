@@ -1,0 +1,22 @@
+.section { margin-top:var(--space-10); padding-top:var(--space-8); border-top:1px solid var(--border-subtle); }
+.section h2 { display:flex; gap:.5rem; align-items:center; font-size:var(--text-2xl); margin-bottom:.75rem; }
+.intro, .note { color:var(--text-secondary); line-height:1.6; }
+.form, .card { margin:1.5rem 0; padding:1.25rem; background:var(--bg-surface); border:1px solid var(--border-strong); border-radius:var(--radius-lg); }
+.form h3 { margin-bottom:1rem; }
+.form label { display:flex; flex-direction:column; gap:.5rem; margin-bottom:1rem; font-weight:600; }
+.form input, .form textarea, .form select { width:100%; min-width:0; padding:.75rem; color:var(--text-primary); background:var(--bg-surface-elevated); border:1px solid var(--border-strong); border-radius:var(--radius-md); font:inherit; }
+.form textarea { resize:vertical; line-height:1.6; }
+.form .confirm { flex-direction:row; align-items:flex-start; font-weight:400; line-height:1.5; }
+.confirm input { width:auto; margin-top:.3rem; flex-shrink:0; }
+.actions { display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; }
+.section button, .login { display:inline-flex; align-items:center; justify-content:center; padding:.6rem 1rem; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--bg-surface-elevated); color:var(--text-primary); font:inherit; cursor:pointer; text-decoration:none; }
+.section button:disabled { opacity:.5; cursor:default; }
+.section .primary { background:var(--gradient-neon); color:white; }
+.card header { display:flex; gap:.75rem; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+.card h4 { margin:.9rem 0 .25rem; font-size:var(--text-sm); color:var(--text-secondary); }
+.card p { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; }
+.card time { font-size:var(--text-xs); color:var(--text-tertiary); }
+.recommendation { color:var(--accent-secondary); font-size:var(--text-sm); }
+.error { color:#fca5a5; margin:1rem 0; }
+.success { color:#86efac; margin:1rem 0; }
+.card a { display:inline-block; margin-top:1rem; color:var(--accent-secondary); overflow-wrap:anywhere; }

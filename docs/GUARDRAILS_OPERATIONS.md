@@ -78,6 +78,23 @@ References: https://supabase.com/docs/guides/auth/redirect-urls and https://supa
 
 The home page shows the latest five matching apps and links to `/apps`. The directory supports URL-based search (name, description, creator, tags and technologies), category, project status, live-demo filtering, newest/upvotes/name sorting, and twelve results per page. Published rows are fetched in batches to avoid silently truncating the directory at the API row limit. Filtering currently runs in the browser; move this to indexed database queries as the catalogue grows. Legacy projects with no status appear under Not specified.
 
+## Citations and recommendations
+
+Before deploying the citations UI, run the complete `docs/app_citations_migration.sql` in Supabase SQL Editor as postgres. It creates a separate table; it can be applied after the base apps schema without requiring the app-submission migration. Existing app RLS determines which apps and citations are public. Do not rerun the full base schema. Add `https://openvibes.vercel.app/app/*` to Supabase Authentication → URL Configuration → Redirect URLs so GitHub sign-in can return to an app detail page (and the equivalent localhost URL for local testing).
+
+Each `/app/:slug` page has a Citations & recommendations section. Signed-in users enter a public name, a concrete use case, feedback, a recommendation, and an optional HTTPS link to a project or write-up. They must attest to personally using the app; the site does not independently verify that assertion. Readers can see both positive and negative experiences. Citations do not change app upvotes or creator badges.
+
+A unique constraint allows one citation per user per app, including simultaneous requests. Users can edit or remove their own citation; creators cannot recommend their own app. RLS and column grants prevent impersonation, edits to another user's feedback, changes to timestamps or moderation status, and citations for apps the caller cannot view. The UI renders feedback as plain text and marks external links `nofollow ugc`. Names cannot use an email fallback. Pagination loads twenty public citations at a time; the author's own citation is fetched separately so it remains editable regardless of its position.
+
+Maintainers can hide abusive content without removing its record:
+
+```sql
+-- Replace the UUID with the exact citation you reviewed.
+UPDATE public.app_citations SET is_hidden = true WHERE id = 'REVIEWED_CITATION_UUID';
+```
+
+Only a maintainer can restore it (`is_hidden = false`). Authors can still see and edit their hidden feedback, but editing does not republish it. There is no reporting or moderation dashboard yet. The section displays an unavailable/retry state if its table is missing or a query fails. Verify create/edit/delete with a test account after migration; no test citations are inserted into production by the automated tests.
+
 ## Article integrity and names
 
 An article URL may be shared once globally, regardless of submitter. A generated database identity plus unique index handles concurrent submissions and direct API calls. The browser provides an early duplicate message and handles PostgreSQL unique violations. Identity normalization covers HTTP/HTTPS, www, trailing slashes, fragments, common tracking parameters, Medium post IDs, and LinkedIn activity/share IDs. Meaningful query parameters are retained. Different custom domains, URL shorteners, redirects and cross-posts with different platform IDs are not automatically resolved; use the direct publisher URL. Similar titles alone do not prove two articles are the same.

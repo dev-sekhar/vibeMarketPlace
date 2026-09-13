@@ -31,6 +31,7 @@ The platform must feel state-of-the-art and "alive" — exceptional visual aesth
 - **Community Links section**: Slack, WhatsApp, Telegram invite links fetched live from `public.profiles` for the app's author. Displayed with official brand SVG icons (correct brand colours). Falls back to `community_links` JSONB column if no profile row exists.
 - **Social Sharing**: "Share to LinkedIn" button opens a pre-composed LinkedIn share intent.
 - **Research & Whitepapers**: Global `/whitepapers` page (see §E).
+- **Citations & recommendations**: App detail pages collect first-hand usage, feedback, recommendations and optional project links. Signed-in users may maintain one citation per app, with edit/delete controls. Self-recommendations by creators are blocked. Database RLS protects ownership and moderator-hidden citations; contributions do not affect app badges or votes. Apply `docs/app_citations_migration.sql` before deploying.
 
 ### ✅ C. User Accounts, Profiles & Trust System
 - **Authentication**: GitHub OAuth via Supabase Auth. Email/password registration also supported. Google SSO available in `AuthContext` but not yet surfaced in the login UI.
