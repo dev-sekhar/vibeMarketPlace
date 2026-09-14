@@ -40,6 +40,8 @@ OpenVibes is where builders share apps created with AI-assisted coding tools (Cu
 
 ## Submission quality requirements
 
+App detail pages also have a feedback board for bugs, feature requests and improvements. Signed-in users post and vote on other people's requests; the app owner sees highest-voted items first and can update their status. Apply the migration described in [feedback board operations](docs/APP_FEEDBACK.md) before deploying this feature.
+
 Built something useful? Share it as open source. Small experiments are welcome when others can understand, run and build on them.
 
 All new submissions require public GitHub source, a recognised full license, a substantive README, a revision-linked TEST_REPORT.json, actual source, a nonempty .gitignore, honest project status and permission to share. Manual functional tests are acceptable. Demo links are optional. Duplicates are blocked and all qualifying submissions await human review before publication.
